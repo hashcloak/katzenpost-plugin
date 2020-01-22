@@ -27,7 +27,6 @@ const (
 	CurrencyVersion    = 0
 	CurrencyCapability = "currency"
 	CurrencyTicker     = "ticker"
-	CurrencyChainId    = "chainId"
 )
 
 var (
@@ -36,22 +35,19 @@ var (
 	errInvalidJson            = errors.New("meson: bad json")
 	errWrongVersion           = errors.New("meson: request version mismatch")
 	errWrongTicker            = errors.New("meson: request ticker mismatch")
-	errWrongChainID           = errors.New("meson: request chaindId mismatch")
 )
 
 type CurrencyRequest struct {
 	Version int
 	Tx      string
 	Ticker  string
-	ChainID int
 }
 
-func NewRequest(ticker string, hexBlob string, chaindId int) *CurrencyRequest {
+func NewRequest(ticker string, hexBlob string) *CurrencyRequest {
 	return &CurrencyRequest{
 		Version: CurrencyVersion,
 		Ticker:  ticker,
-		Tx:      hexBlob,
-		ChainID: chaindId,
+		Tx:      hexBlob
 	}
 }
 
@@ -69,9 +65,6 @@ func RequestFromJson(expectedTicker string, expectedChainId int, rawRequest []by
 	}
 	if req.Ticker != expectedTicker {
 		return nil, errWrongTicker
-	}
-	if req.ChainID != expectedChainId {
-		return nil, errWrongChainID
 	}
 	return &req, nil
 }
