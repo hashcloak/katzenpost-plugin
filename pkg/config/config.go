@@ -27,7 +27,6 @@ import (
 // Config is the configuration for this currency transaction proxy service.
 type Config struct {
 	Ticker   string
-	ChainID  int
 	RPCUser  string
 	RPCPass  string
 	RPCURL   string
@@ -40,9 +39,6 @@ type Config struct {
 func (cfg *Config) Validate() error {
 	if cfg.Ticker == "" {
 		return errors.New("config: Ticker is not set")
-	}
-	if cfg.ChainID <= 0 {
-		return errors.New("config: ChainId is not set")
 	}
 	if cfg.RPCUser == "" {
 		return errors.New("config: RPCUser is not set")
