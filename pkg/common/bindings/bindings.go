@@ -20,7 +20,7 @@ package main
 import "C"
 
 import (
-	"github.com/hashcloak/Meson/pkg/common"
+	"github.com/hashcloak/Meson-plugin/pkg/common"
 )
 
 const (
