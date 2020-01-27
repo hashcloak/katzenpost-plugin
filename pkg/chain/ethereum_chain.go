@@ -35,5 +35,5 @@ func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error)
 		Params:  []string{txHex},
 	}
 	marshalledRequest, err := json.Marshal(er)
-	return PostRequest{URL: "", Body: marshalledRequest}, err
+	return PostRequest{Body: marshalledRequest}, err
 }
