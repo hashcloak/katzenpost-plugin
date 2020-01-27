@@ -18,7 +18,6 @@ package proxy
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -26,9 +25,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/hashcloak/Meson-plugin/pkg/chain"
 	"github.com/hashcloak/Meson-plugin/pkg/common"
 	"github.com/hashcloak/Meson-plugin/pkg/config"
-	"github.com/hashcloak/Meson-plugin/pkg/chain"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -78,10 +77,10 @@ type Currency struct {
 
 	params map[string]string
 
-	ticker   string
-	rpcUser  string
-	rpcPass  string
-	rpcURL   string
+	ticker  string
+	rpcUser string
+	rpcPass string
+	rpcURL  string
 }
 
 // GetParameters : Returns params from Currency struct
@@ -153,11 +152,11 @@ func (k *Currency) sendTransaction(ticker string, txHex string) error {
 // New : Returns a pointer to a newly instantiated Currency struct
 func New(cfg *config.Config) (*Currency, error) {
 	currency := &Currency{
-		ticker:   cfg.Ticker,
-		rpcUser:  cfg.RPCUser,
-		rpcPass:  cfg.RPCPass,
-		rpcURL:   cfg.RPCURL,
-		params:   make(map[string]string),
+		ticker:  cfg.Ticker,
+		rpcUser: cfg.RPCUser,
+		rpcPass: cfg.RPCPass,
+		rpcURL:  cfg.RPCURL,
+		params:  make(map[string]string),
 	}
 	currency.jsonHandle.Canonical = true
 	currency.jsonHandle.ErrorIfNoField = true

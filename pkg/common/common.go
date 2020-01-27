@@ -47,11 +47,11 @@ func NewRequest(ticker string, hexBlob string) *CurrencyRequest {
 	return &CurrencyRequest{
 		Version: CurrencyVersion,
 		Ticker:  ticker,
-		Tx:      hexBlob
+		Tx:      hexBlob,
 	}
 }
 
-func RequestFromJson(expectedTicker string, expectedChainId int, rawRequest []byte) (*CurrencyRequest, error) {
+func RequestFromJson(expectedTicker string, rawRequest []byte) (*CurrencyRequest, error) {
 	// Parse out the request payload.
 	req := CurrencyRequest{}
 	dec := codec.NewDecoderBytes(bytes.TrimRight(rawRequest, "\x00"), &jsonHandle)
