@@ -27,14 +27,13 @@ type ETHChain struct {
 
 // NewRequest : Takes signed transaction data as a parameter
 // Returns a marshalled request
-func (ec *ETHChain) NewRequest(txHex string) ([]byte, error){
-	er := ethRequest {
-		ID: ec.chainID,
+func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
+	er := ethRequest{
+		ID:      ec.chainID,
 		JSONRPC: "2.0",
-		METHOD: "eth_sendRawTransaction",
-		Params: []string{txHex},
+		METHOD:  "eth_sendRawTransaction",
+		Params:  []string{txHex},
 	}
-
 	marshalledRequest, err := json.Marshal(er)
-	return marshalledRequest, err
+	return PostRequest{URL: "", Body: marshalledRequest}, err
 }

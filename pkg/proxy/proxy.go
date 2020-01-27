@@ -122,15 +122,14 @@ func (k *Currency) sendTransaction(ticker string, txHex string) error {
 		return err
 	}
 	// Create a new appropriately marshalled request
-	marshalledRequest, err := c.NewRequest(txHex)
+	postRequest, err := c.NewRequest(k.rpcURL, txHex)
 	if err != nil {
 		return err
 	}
 
-	bodyReader := bytes.NewReader(marshalledRequest)
-
 	// create an http request
-	httpReq, err := http.NewRequest("POST", k.rpcURL, bodyReader)
+	httpReq, err := http.NewRequest("POST", postRequest.URL, bytes.NewReader(postRequest.Body))
+
 	if err != nil {
 		return err
 	}
