@@ -46,7 +46,6 @@ func TestProxy(t *testing.T) {
 	defer os.RemoveAll(logDir) // clean up
 	content := []byte(fmt.Sprintf(`
 Ticker = "ETH"
-ChainID = 4
 RPCUser = "somerpcusername"
 RPCPass = "somepassword"
 RPCURL = "localhost:8545"
@@ -63,7 +62,7 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	currencyRequest := common.NewRequest(cfg.Ticker, hexBlob, cfg.ChainID)
+	currencyRequest := common.NewRequest(cfg.Ticker, hexBlob)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true

@@ -154,7 +154,6 @@ func (k *Currency) sendTransaction(ticker string, txHex string) error {
 func New(cfg *config.Config) (*Currency, error) {
 	currency := &Currency{
 		ticker:   cfg.Ticker,
-		chaindID: cfg.ChainID,
 		rpcUser:  cfg.RPCUser,
 		rpcPass:  cfg.RPCPass,
 		rpcURL:   cfg.RPCURL,
