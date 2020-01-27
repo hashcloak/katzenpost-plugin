@@ -28,6 +28,7 @@ import (
 
 	"github.com/hashcloak/Meson-plugin/pkg/common"
 	"github.com/hashcloak/Meson-plugin/pkg/config"
+	"github.com/hashcloak/Meson-plugin/pkg/chain"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -70,32 +71,6 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 	return leveler
 }
 
-// An ethereum request abstraction.
-// Only need it for one method, though.
-type ethRequest struct {
-	// ChainId to indicate which Ethereum-based network
-	ID int `json:"id"`
-	// Indicates which version of JSON RPC to use
-	// Since all networks support JSON RPC 2.0,
-	// this attribute is a constant
-	JSONRPC string `json:"jsonrpc"`
-	// Which method you want to call
-	METHOD string `json:"method"`
-	// Params for the method you want to call
-	Params []string `json:"params"`
-}
-
-// Takes a chainId and signed transaction data as parameters
-// Returns a new ethereum request
-func newEthRequest(id int, params []string) ethRequest {
-	return ethRequest{
-		ID:      id,
-		JSONRPC: "2.0",
-		METHOD:  "eth_sendRawTransaction",
-		Params:  params,
-	}
-}
-
 // Currency :  Handles logging and RPC details. Implements the ServicePlugin interface
 type Currency struct {
 	log        *logging.Logger
@@ -104,7 +79,6 @@ type Currency struct {
 	params map[string]string
 
 	ticker   string
-	chaindID int
 	rpcUser  string
 	rpcPass  string
 	rpcURL   string
@@ -120,13 +94,13 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 	k.log.Debugf("Handling request %d", id)
 
 	// Send request to HTTP RPC.
-	req, err := common.RequestFromJson(k.ticker, k.chaindID, payload)
+	req, err := common.RequestFromJson(k.ticker, payload)
 	if err != nil {
 		k.log.Debug("Failed to send currency transaction request: (%v)", err)
 		return common.NewResponse(ResponseError, err.Error()).ToJson(), nil
 	}
 
-	err = k.sendTransaction(req.Tx)
+	err = k.sendTransaction(req.Ticker, req.Tx)
 	if err != nil {
 		k.log.Debug("Failed to send currency transaction request: (%v)", err)
 		return common.NewResponse(ResponseError, err.Error()).ToJson(), nil
@@ -140,15 +114,20 @@ func (k *Currency) Halt() {
 
 }
 
-func (k *Currency) sendTransaction(txHex string) error {
+func (k *Currency) sendTransaction(ticker string, txHex string) error {
 	k.log.Debug("sendTransaction")
 
-	// marshall new transaction blob
-	// allowHighFees := true
-	// cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
-	// txId := 0 // this txId is not important
-	ethRequest := newEthRequest(k.chaindID, []string{txHex})
-	marshalledRequest, err := json.Marshal(ethRequest)
+	// Get supported chain
+	chain, err := chain.GetChain(ticker)
+	if err != nil {
+		return err
+	}
+	// Create a new appropriately marshalled request
+	marshalledRequest, err := chain.NewRequest(txHex)
+	if err != nil {
+		return err
+	}
+
 	bodyReader := bytes.NewReader(marshalledRequest)
 
 	// create an http request
