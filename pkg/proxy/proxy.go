@@ -118,12 +118,12 @@ func (k *Currency) sendTransaction(ticker string, txHex string) error {
 	k.log.Debug("sendTransaction")
 
 	// Get supported chain
-	chain, err := chain.GetChain(ticker)
+	c, err := chain.GetChain(ticker)
 	if err != nil {
 		return err
 	}
 	// Create a new appropriately marshalled request
-	marshalledRequest, err := chain.NewRequest(txHex)
+	marshalledRequest, err := c.NewRequest(txHex)
 	if err != nil {
 		return err
 	}
