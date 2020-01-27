@@ -1,13 +1,8 @@
-package ethereum
+package chain
 
 import (
 	"encoding/json"
 )
-
-// Chain is a struct for identifier blockchains and their forks
-type Chain struct {
-    ChainID uint
-}
 
 // An ethereum request abstraction.
 // Only need it for one method, though.
@@ -24,11 +19,17 @@ type ethRequest struct {
 	Params []string `json:"params"`
 }
 
-// NewRequest: Takes signed transaction data as a parameter
+// ETHChain is a struct for identifier blockchains and their forks
+type ETHChain struct {
+	chainID uint
+	ticker  string
+}
+
+// NewRequest : Takes signed transaction data as a parameter
 // Returns a marshalled request
-func (c *Chain) NewRequest(txHex string) ([]byte, error){
+func (ec *ETHChain) NewRequest(txHex string) ([]byte, error){
 	er := ethRequest {
-		ID: c.ChainID,
+		ID: ec.chainID,
 		JSONRPC: "2.0",
 		METHOD: "eth_sendRawTransaction",
 		Params: []string{txHex},
