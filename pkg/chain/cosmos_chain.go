@@ -10,8 +10,8 @@ type CosmosChain struct {
 	chainID int
 }
 
-// NewRequest : Takes signed transaction data as a parameter
-// Returns a URL endpoint
+// NewRequest takes an RPC URL and a hexadecimal transaction and
+// returns a concatenated URL
 func (ec *CosmosChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
 	if len(rpcURL) == 0 {
 		return PostRequest{}, fmt.Errorf("No URL value for cosmos api")

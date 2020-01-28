@@ -26,8 +26,8 @@ type ETHChain struct {
 	ticker  string
 }
 
-// NewRequest : Takes signed transaction data as a parameter
-// Returns a marshalled request
+// NewRequest takes an RPC URL and a hexadecimal transaction.
+// Returns a marshalled request with the same RPC URL
 func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
 	if len(rpcURL) == 0 {
 		return PostRequest{}, fmt.Errorf("Non existent RPC URL for Ethereum chain")
