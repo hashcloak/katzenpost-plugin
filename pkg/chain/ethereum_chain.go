@@ -27,7 +27,7 @@ type ETHChain struct {
 }
 
 // NewRequest takes an RPC URL and a hexadecimal transaction.
-// Returns a marshalled request with the same RPC URL
+// Returns PostRequest for ethereum nodes
 func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
 	if len(rpcURL) == 0 {
 		return PostRequest{}, fmt.Errorf("Non existent RPC URL for Ethereum chain")
