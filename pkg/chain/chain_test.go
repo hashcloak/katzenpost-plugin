@@ -24,10 +24,31 @@ func TestChainFactoryErrorEmpty(t *testing.T) {
 	}
 }
 
+func TestEthereumChainURLEmptyValue(t *testing.T) {
+	chainInterface, _ := GetChain("ETH")
+	_, err := chainInterface.NewRequest("", "")
+	if err == nil {
+		t.Fatalf("Should return an error")
+	}
+	expectedErrorValue := "Non existent RPC URL for Ethereum chain"
+	if err.Error() != expectedErrorValue {
+		t.Fatalf("Not the right error value.\nExpected: %s\nGot: %s", expectedErrorValue, err.Error())
+	}
+}
+
+func TestEthereumChainURLValue(t *testing.T) {
+	chainInterface, _ := GetChain("ETH")
+	expectedURL := "EXPECTED_URL"
+	postRequest, _ := chainInterface.NewRequest(expectedURL, "")
+	if postRequest.URL != expectedURL {
+		t.Fatalf("Expected %s, got %s", expectedURL, postRequest.URL)
+	}
+}
+
 func TestEthereumChainTxnInBody(t *testing.T) {
 	chainInterface, _ := GetChain("ETH")
 	txn := `"TXN"`
-	postRequest, _ := chainInterface.NewRequest("", txn)
+	postRequest, _ := chainInterface.NewRequest("URL", txn)
 	var expectedValue ethRequest
 	json.Unmarshal(postRequest.Body, &expectedValue)
 	if len(expectedValue.Params) != 1 {

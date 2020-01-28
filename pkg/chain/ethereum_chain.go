@@ -2,6 +2,7 @@ package chain
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // An ethereum request abstraction.
@@ -28,6 +29,9 @@ type ETHChain struct {
 // NewRequest : Takes signed transaction data as a parameter
 // Returns a marshalled request
 func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
+	if len(rpcURL) == 0 {
+		return PostRequest{}, fmt.Errorf("Non existent RPC URL for Ethereum chain")
+	}
 	er := ethRequest{
 		ID:      ec.chainID,
 		JSONRPC: "2.0",
@@ -35,5 +39,5 @@ func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error)
 		Params:  []string{txHex},
 	}
 	marshalledRequest, err := json.Marshal(er)
-	return PostRequest{Body: marshalledRequest}, err
+	return PostRequest{URL: rpcURL, Body: marshalledRequest}, err
 }
