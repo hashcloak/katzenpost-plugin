@@ -127,8 +127,10 @@ func (k *Currency) sendTransaction(ticker string, txHex string) error {
 		return err
 	}
 
+	bodyReader := bytes.NewReader(postRequest.Body)
+
 	// create an http request
-	httpReq, err := http.NewRequest("POST", postRequest.URL, bytes.NewReader(postRequest.Body))
+	httpReq, err := http.NewRequest("POST", k.rpcURL, bodyReader)
 
 	if err != nil {
 		return err
