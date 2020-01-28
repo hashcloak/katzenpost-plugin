@@ -44,11 +44,27 @@ func TestCosmosChainBody(t *testing.T) {
 		t.Fatalf("Body should be empty for Cosmos request")
 	}
 }
-func TestCosmosChainURL(t *testing.T) {
+func TestCosmosChainURLEmpty(t *testing.T) {
 	chainInterface, _ := GetChain("TBNB")
 	postRequest, _ := chainInterface.NewRequest("", "")
-	t.Log("HI")
 	if postRequest.URL != broadcastTxAsync {
+		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest.URL)
+	}
+}
+func TestCosmosChainURLAppend(t *testing.T) {
+	chainInterface, _ := GetChain("TBNB")
+	expectedTxn := "EXPECTED_TXN"
+	postRequest, _ := chainInterface.NewRequest("", expectedTxn)
+	if postRequest.URL != broadcastTxAsync+expectedTxn {
+		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest.URL)
+	}
+}
+
+func TestCosmosChainURL(t *testing.T) {
+	chainInterface, _ := GetChain("TBNB")
+	expectedURL := "EXPECTED_URL"
+	postRequest, _ := chainInterface.NewRequest(expectedURL, "")
+	if postRequest.URL != expectedURL+broadcastTxAsync {
 		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest.URL)
 	}
 }

@@ -11,7 +11,7 @@ type CosmosChain struct {
 }
 
 // NewRequest : Takes signed transaction data as a parameter
-// Returns a marshalled request
+// Returns a URL endpoint
 func (ec *CosmosChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
 	URL := fmt.Sprintf("%s/broadcast_tx_async?tx=%s", rpcURL, txHex)
 	return PostRequest{URL: URL}, nil
