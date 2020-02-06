@@ -9,7 +9,7 @@ dockerRepo=hashcloak
 katzenServerRepo=https://github.com/katzenpost/server
 katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
 katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
-mesonServer=$(dockerRepo)/Meson
+mesonServer=$(dockerRepo)/meson
 
 messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not pushing: "
 messagePull=echo "LOG: Success in pulling image: "
