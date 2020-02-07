@@ -16,6 +16,6 @@ func (ec *CosmosChain) NewRequest(rpcURL string, txHex string) (PostRequest, err
 	if len(rpcURL) == 0 {
 		return PostRequest{}, fmt.Errorf("No URL value for cosmos api")
 	}
-	URL := fmt.Sprintf("%s/broadcast_tx_async?tx=%s", rpcURL, txHex)
+	URL := fmt.Sprintf("%s/broadcast_tx_async?tx=0x%s", rpcURL, txHex)
 	return PostRequest{URL: URL}, nil
 }
