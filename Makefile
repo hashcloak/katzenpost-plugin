@@ -1,5 +1,5 @@
 TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
-BRANCH=$(TRAVIS_BRANCH)
+MESON_TAG ?= $(TRAVIS_BRANCH)
 
 flags=.makeFlags
 VPATH=$(flags)
@@ -9,7 +9,7 @@ dockerRepo=hashcloak
 katzenServerRepo=https://github.com/katzenpost/server
 katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
 katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
-mesonServer=$(dockerRepo)/meson
+mesonServer=$(dockerRepo)/meson:$(MESON_TAG)
 
 messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not pushing: "
 messagePull=echo "LOG: Success in pulling image: "
@@ -32,7 +32,7 @@ push-katzen-server:
 				$(MAKE) build-katzen-server; docker push $(katzenServer))
 
 push-meson: build-meson
-	docker push '$(mesonServer):$(BRANCH)'
+	docker push '$(mesonServer)'
 
 build: build-katzen-server build-meson
 
@@ -43,7 +43,8 @@ build-katzen-server:
 
 build-meson: pull-katzen-server
 	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./Dockerfile > /tmp/meson.Dockerfile
-	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) .
+	docker build -f /tmp/meson.Dockerfile -t $(mesonServer) .
+	echo $(MESON_TAG)
 	@touch $(flags)/$@
 
 test:

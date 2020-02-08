@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	broadcastTxAsync = "/broadcast_tx_async?tx="
+	broadcastTxAsync = "/broadcast_tx_async?tx=0x"
 )
 
 func TestChainFactoryError(t *testing.T) {
