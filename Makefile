@@ -5,9 +5,13 @@ flags=.makeFlags
 VPATH=$(flags)
 $(shell mkdir -p $(flags))
 
+KATZEN_REPO ?= https://github.com/katzenpost/server
+katzenServerRepo=$(KATZEN_REPO)
+
+KATZEN_TAG ?= $(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
+katzenServerTag ?= $(KATZEN_TAG)
+
 dockerRepo=hashcloak
-katzenServerRepo=https://github.com/katzenpost/server
-katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
 katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
 mesonServer=$(dockerRepo)/meson:$(MESON_TAG)
 
@@ -32,19 +36,19 @@ push-katzen-server:
 				$(MAKE) build-katzen-server; docker push $(katzenServer))
 
 push-meson: build-meson
-	docker push '$(mesonServer)'
+	docker push $(mesonServer)
 
 build: build-katzen-server build-meson
 
 build-katzen-server:
-	git clone $(katzenServerRepo) /tmp/server || git --git-dir=/tmp/server/.git --work-tree=/tmp/server pull origin master
+	git clone $(katzenServerRepo) /tmp/server || true
+	cd /tmp/server && git fetch && git checkout $(katzenServerTag) && cd -
 	docker build -f /tmp/server/Dockerfile -t $(katzenServer) /tmp/server
 	@touch $(flags)/$@
 
 build-meson: pull-katzen-server
 	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./Dockerfile > /tmp/meson.Dockerfile
 	docker build -f /tmp/meson.Dockerfile -t $(mesonServer) .
-	echo $(MESON_TAG)
 	@touch $(flags)/$@
 
 test:
