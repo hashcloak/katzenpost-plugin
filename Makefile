@@ -46,7 +46,7 @@ build-katzen-server:
 	docker build -f /tmp/server/Dockerfile -t $(katzenServer) /tmp/server
 	@touch $(flags)/$@
 
-build-meson: pull-katzen-server
+build-meson: build-katzen-server
 	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./Dockerfile > /tmp/meson.Dockerfile
 	docker build -f /tmp/meson.Dockerfile -t $(mesonServer) .
 	@touch $(flags)/$@
