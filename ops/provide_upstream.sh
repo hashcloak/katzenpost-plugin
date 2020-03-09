@@ -4,7 +4,7 @@ source ops/common.sh
 function isContainerSameAsMasterTag() {
   container=$(echo -n $1 | cut -f1 -d:)
   tag=$(echo -n $1 | cut -f2 -d:)
-  if containersAreEqual $container:master $container:$tag; then
+  if compareLocalContainers $container:master $container:$tag; then
     return 0
   else
     return 1
@@ -26,13 +26,13 @@ function provideMasterTag() {
 }
 
 function pullOrBuild() {
-  repo=$1
-  tag=$2
-  if containerExistsInCloud $repo $tag; then
-    docker pull $repo:$tag
+  container=$(echo -n $1 | cut -f1 -d:)
+  tag=$(echo -n $1 | cut -f2 -d:)
+  if containerExistsInCloud $container:$tag; then
+    docker pull $container:$tag
   else
-    LOG "Upstream $repo:$tag not found. Building..."
-    buildUpstream $(echo -n $repo | cut -f2 -d/) $tag
+    LOG "Upstream $container:$tag not found. Building..."
+    buildUpstream $(echo -n $container | cut -f2 -d/) $tag
   fi
 }
 
@@ -50,17 +50,17 @@ function buildUpstream() {
   fi
 
   rm -rf /tmp/$name
-  git clone $katzenRepo/$name /tmp/$name
+  git clone $katzenRepo/$name /tmp/$name > /dev/null
   cd /tmp/$name
-  git -c advice.detachedHead="false" checkout $tag
+  git -c advice.detachedHead="false" checkout $tag > /dev/null
   LOG "Docker file $dockerFile"
-  docker build -f $dockerFile -t hashcloak/$name:$tag /tmp/$name
+  docker build -f $dockerFile -t hashcloak/$name:$tag /tmp/$name > /dev/null
   cd -
 }
 
 function pushMaster() {
   name=$1
-  if containerExistsInCloud $name master; then
+  if containerExistsInCloud $name:master; then
     LOG "Docker hub is up to date"
   else
     LOG "Docker hub needs update for $name:master tag. Pushing..."
@@ -81,11 +81,22 @@ function retagAsMaster() {
   fi
 }
 
-pullOrBuild hashcloak/authority $katzenAuthMasterHash
-pullOrBuild hashcloak/server $katzenServerMasterHash
+master=hashcloak/authority:master
+newTag=hashcloak/authority:$katzenAuthMasterHash
+compareRemoteContainers $master $newTag
+if [ $? -eq 1 ]; then
+  docker pull $master
+else
+  pullOrBuild $newTag
+  retagAsMaster $newTag
+fi
 
-provideMasterTag hashcloak/authority
-provideMasterTag hashcloak/server
-
-retagAsMaster hashcloak/authority:$katzenAuthMasterHash
-retagAsMaster hashcloak/server:$katzenServerMasterHash
+master=hashcloak/server:master
+newTag=hashcloak/server:$katzenServerMasterHash
+compareRemoteContainers $master $newTag
+if [ $? -eq 1 ]; then
+  docker pull $master
+else
+  pullOrBuild $newTag
+  retagAsMaster $newTag
+fi
