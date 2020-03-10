@@ -12,6 +12,9 @@ katzenBaseAuthTag="${KATZEN_AUTH_TAG:-master}"
 
 dockerApiURL=https://hub.docker.com/v2/repositories
 
+mesonCurrentBranchHash="${mesonMasterHash:-$(git rev-parse HEAD | cut -c1-7)}"
+mesonCurrentBranchTag="${MESON_TAG:-$(git branch | grep \* | cut -d' ' -f2)}"
+
 function LOG(){
   echo "LOG: $1"
 }

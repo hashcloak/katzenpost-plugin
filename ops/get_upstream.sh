@@ -65,3 +65,13 @@ else
   pullOrBuild $newTag
   retagAsMaster $newTag
 fi
+
+master=hashcloak/server:$katzenBaseServerTag
+newTag=hashcloak/server:$katzenServerMasterHash
+compareRemoteContainers $master $newTag
+if [ $? -eq 0 ]; then
+  docker pull $master
+else
+  pullOrBuild $newTag
+  retagAsMaster $newTag
+fi
