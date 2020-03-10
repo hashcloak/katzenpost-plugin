@@ -6,6 +6,7 @@ katzenAuthRepo="${KATZEN_AUTH_REPO:-${katzenRepo}/authority}"
 
 katzenServerMasterHash="${katzenServerMasterHash:-$(git ls-remote --heads $katzenServerRepo | grep master | cut -c1-7)}"
 katzenAuthMasterHash="${katzenAuthMasterHash:-$(git ls-remote --heads $katzenAuthRepo | grep master | cut -c1-7)}"
+
 katzenBaseServerTag="${KATZEN_SERVER_TAG:-master}"
 katzenBaseAuthTag="${KATZEN_AUTH_TAG:-master}"
 

@@ -13,7 +13,7 @@ function isContainerSameAsMasterTag() {
 
 function provideMasterTag() {
   docker inspect $1:master > /dev/null
-  if [ $? -eq 0 ]; then
+  if [ $? ]; then
     return 0
   fi
   LOG "Master tag for $1 container doesn't exist locally."
@@ -70,7 +70,7 @@ function pushMaster() {
 
 function retagAsMaster() {
   isContainerSameAsMasterTag $1
-  if [ $? -eq 0 ]; then
+  if [ $? ]; then
    LOG "Container $container is the same as master tag."
   else
     container=$(echo -n $1 | cut -f1 -d:)
@@ -95,7 +95,7 @@ else
   retagAsMaster $newTag
 fi
 
-master=hashcloak/server:katzenBaseServerTag
+master=hashcloak/server:$katzenBaseServerTag
 newTag=hashcloak/server:$katzenServerMasterHash
 compareRemoteContainers $master $newTag
 if [ ! $? ]; then
