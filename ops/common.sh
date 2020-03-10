@@ -48,12 +48,14 @@ function compareRemoteContainers() {
     containerOne=$(getContainerInfo $1 | jq '.images[0].digest')
   else
     LOG "Compare remote #1: $1 not found in cloud"
+    return 1
   fi
 
   if containerExistsInCloud $2; then
     containerTwo=$(getContainerInfo $2 | jq '.images[0].digest')
   else
     LOG "Compare remote #2: $2 not found in cloud"
+    return 1
   fi
 
   if [[ $containerOne == $containerTwo ]]; then
