@@ -21,6 +21,9 @@ build_meson:  get_upstream
 	bash ops/build_containers.sh
 	@touch $(flags)/$@
 
+testnet: build_meson genconfig
+	bash ops/testnet.sh
+
 push_containers: build_meson
 	bash ops/push_containers.sh
 	@touch $(flags)/$@
