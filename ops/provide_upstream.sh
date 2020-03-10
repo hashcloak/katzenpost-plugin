@@ -75,26 +75,30 @@ function retagAsMaster() {
   else
     container=$(echo -n $1 | cut -f1 -d:)
     tag=$(echo -n $1 | cut -f2 -d:)
-    LOG "Container $container is NOT the same as master tag"
+    LOG "Container $container:$tag is NOT the same as master tag"
     LOG "Retagging master with $tag"
-    docker tag hashcloak/authority:master hashcloak/authority:$tag
+    docker tag hashcloak/authority:$tag hashcloak/authority:master
   fi
 }
 
-master=hashcloak/authority:master
+master=hashcloak/authority:$katzenBaseAuthTag
+LOG $master
 newTag=hashcloak/authority:$katzenAuthMasterHash
+LOG $newTag
 compareRemoteContainers $master $newTag
-if [ $? -eq 1 ]; then
+if [ ! $? ]; then
+  LOG "pulling"
   docker pull $master
 else
+  LOG "building"
   pullOrBuild $newTag
   retagAsMaster $newTag
 fi
 
-master=hashcloak/server:master
+master=hashcloak/server:katzenBaseServerTag
 newTag=hashcloak/server:$katzenServerMasterHash
 compareRemoteContainers $master $newTag
-if [ $? -eq 1 ]; then
+if [ ! $? ]; then
   docker pull $master
 else
   pullOrBuild $newTag
