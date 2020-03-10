@@ -87,10 +87,8 @@ newTag=hashcloak/authority:$katzenAuthMasterHash
 LOG $newTag
 compareRemoteContainers $master $newTag
 if [ ! $? ]; then
-  LOG "pulling"
   docker pull $master
 else
-  LOG "building"
   pullOrBuild $newTag
   retagAsMaster $newTag
 fi
