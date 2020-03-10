@@ -11,20 +11,6 @@ function isContainerSameAsMasterTag() {
   fi
 }
 
-function provideMasterTag() {
-  docker inspect $1:master > /dev/null
-  if [ $? ]; then
-    return 0
-  fi
-  LOG "Master tag for $1 container doesn't exist locally."
-  if containerExistsInCloud $1:master; then
-    docker pull $1:master
-    return 0
-  fi
-  LOG "Master tag for $1 container doesn't in cloud."
-  return 1
-}
-
 function pullOrBuild() {
   container=$(echo -n $1 | cut -f1 -d:)
   tag=$(echo -n $1 | cut -f2 -d:)
@@ -53,31 +39,20 @@ function buildUpstream() {
   git clone $katzenRepo/$name /tmp/$name > /dev/null
   cd /tmp/$name
   git -c advice.detachedHead="false" checkout $tag > /dev/null
-  LOG "Docker file $dockerFile"
   docker build -f $dockerFile -t hashcloak/$name:$tag /tmp/$name > /dev/null
   cd -
-}
-
-function pushMaster() {
-  name=$1
-  if containerExistsInCloud $name:master; then
-    LOG "Docker hub is up to date"
-  else
-    LOG "Docker hub needs update for $name:master tag. Pushing..."
-    docker push $name:master
-  fi
 }
 
 function retagAsMaster() {
   isContainerSameAsMasterTag $1
   if [ $? ]; then
-   LOG "Container $container is the same as master tag."
+   LOG "Container $container is the same as master tag. Doing nothing."
   else
     container=$(echo -n $1 | cut -f1 -d:)
     tag=$(echo -n $1 | cut -f2 -d:)
     LOG "Container $container:$tag is NOT the same as master tag"
     LOG "Retagging master with $tag"
-    docker tag hashcloak/authority:$tag hashcloak/authority:master
+    docker tag hashcloak/$conatainer:$tag hashcloak/$container:master
   fi
 }
 
