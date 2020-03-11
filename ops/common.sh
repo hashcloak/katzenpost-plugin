@@ -31,7 +31,7 @@ function containerExistsInCloud() {
 function getContainerInfo() {
   # be careful when adding logs here since
   # it prints to stdout and the other functions
-  # that call this one might not be able to hanlde
+  # that call this one might not be able to handle
   # the logs
   container=$(echo -n $1 | cut -f1 -d:)
   tag=$(echo -n $1 | cut -f2 -d:)
