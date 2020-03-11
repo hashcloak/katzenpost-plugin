@@ -77,6 +77,7 @@ for i in $(seq 0 $(($numberMixNodes-1))); do
   # the 30000 40000 port values are hardcodeed in genconfig
   # which is why static port numbers need to be used
   mixnetPort=$((30000+$globalPortIndex))
+  prometheusPort=$((35000+$globalPortIndex))
   cat - >> $composeFile<<EOF
    node$i:
      image: hashcloak/meson:$mesonCurrentBranchTag
@@ -84,6 +85,7 @@ for i in $(seq 0 $(($numberMixNodes-1))); do
        - /tmp/meson-current/node-$i:/conf
      ports:
        - "$mixnetPort:$mixnetPort"
+       - "$prometheusPort:6543"
 
 EOF
 done
