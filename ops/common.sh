@@ -19,13 +19,6 @@ function LOG(){
   echo "LOG: $1"
 }
 
-pushContainers() {
-  tags=$(docker images $1 --format "{{.Tag}}")
-  for x in $tags; do
-    docker push $1:$x
-  done
-}
-
 function containerExistsInCloud() {
   # We pipe the standard output to null when it finds the container
   # because this means the function returns a 0 but it doesn't
