@@ -24,6 +24,9 @@ build_meson:  get_upstream
 testnet: build_meson genconfig
 	bash ops/testnet.sh
 
+stop_testnet:
+	docker stack rm mixnet
+
 push_containers: build_meson
 	bash ops/push_containers.sh
 	@touch $(flags)/$@
