@@ -12,8 +12,20 @@ katzenBaseAuthTag="${KATZEN_AUTH_TAG:-master}"
 
 dockerApiURL=https://hub.docker.com/v2/repositories
 
-mesonCurrentBranchHash="${mesonMasterHash:-$(git rev-parse HEAD | cut -c1-7)}"
-mesonCurrentBranchTag="${MESON_TAG:-$(git branch | grep \* | cut -d' ' -f2)}"
+#TRAVIS_BRANCH
+# - for push builds, or builds not triggered by a pull request, this is the name of the branch.
+# - for builds triggered by a pull request this is the name of the branch targeted by the pull request.
+# - for builds triggered by a tag, this is the same as the name of the tag (TRAVIS_TAG).
+if [[ $TRAVIS_EVENT_TYPE == "pull_request" ]]; then
+  HASH=${TRAVIS_PULL_REQUEST_SHA:0:7}
+  BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
+else
+  HASH=${TRAVIS_COMMIT:0:7}
+  BRANCH=$TRAVIS_BRANCH
+fi
+
+mesonCurrentBranchHash="${HASH:-$(git rev-parse HEAD | cut -c1-7)}"
+mesonCurrentBranchTag="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2)}"
 
 function LOG(){
   echo "LOG: $1"
