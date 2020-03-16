@@ -2,8 +2,7 @@
 source ops/common.sh
 
 function pushContainer() {
-  containerExistsInCloud $$
-  if [ $? -eq 1 ]; then
+  if ! containerExistsInCloud $1; then
     docker push $container
   fi
 }
