@@ -23,7 +23,7 @@ build_meson:  get_upstream
 
 testnet: build_meson genconfig
 	bash ops/testnet.sh
-	sleep 30
+	sleep 20
 
 integration_test: testnet
 	bash ops/integration_test.sh
