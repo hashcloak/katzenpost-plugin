@@ -25,7 +25,7 @@ function generateClientToml() {
 EOF
 }
 
-numberMixNodes=${NUMBER_NODES:-4}
+numberMixNodes=${NUMBER_NODES:-2}
 numberProviders=${NUMBER_PROVIDERS:-2}
 startingPortNumber=30000
 globalPortIndex=0
