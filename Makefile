@@ -24,6 +24,9 @@ build_meson:  get_upstream
 testnet: build_meson genconfig
 	bash ops/testnet.sh
 
+integration_test: testnet
+	bash ops/integration_test.sh
+
 stop_testnet:
 	docker stack rm mixnet
 

@@ -27,6 +27,8 @@ fi
 mesonCurrentBranchHash="${HASH:-$(git rev-parse HEAD | cut -c1-7)}"
 mesonCurrentBranchTag="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2)}"
 
+mesonClientTestCommit=${CLIENT_TEST_COMMIT:-master}
+
 function LOG(){
   echo "LOG: $1"
 }
