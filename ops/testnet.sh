@@ -43,12 +43,12 @@ composeFile=$tempDir/testnet-compose.yml
 cat - > $composeFile<<EOF
 version: "3.7"
 services:
-   authority:
-     image: hashcloak/authority:$katzenBaseAuthTag
-     volumes:
-       - /tmp/meson-current/nonvoting:/conf
-     ports:
-       - "$startingPortNumber:$startingPortNumber"
+  authority:
+    image: hashcloak/authority:$katzenBaseAuthTag
+    volumes:
+      - /tmp/meson-current/nonvoting:/conf
+    ports:
+      - "$startingPortNumber:$startingPortNumber"
 
 EOF
 
@@ -60,14 +60,16 @@ for i in $(seq 0 $(($numberProviders-1))); do
   httpRegistrationPort=$((40000+$globalPortIndex))
   prometheusPort=$((35000+$globalPortIndex))
   cat - >> $composeFile<<EOF
-   provider$i:
-     image: hashcloak/meson:$mesonCurrentBranchTag
-     volumes:
-       - /tmp/meson-current/provider-$i:/conf
-     ports:
-       - "$mixnetPort:$mixnetPort"
-       - "$httpRegistrationPort:$httpRegistrationPort"
-       - "$prometheusPort:6543"
+  provider$i:
+    image: hashcloak/meson:$mesonCurrentBranchTag
+    volumes:
+      - /tmp/meson-current/provider-$i:/conf
+    ports:
+      - "$mixnetPort:$mixnetPort"
+      - "$httpRegistrationPort:$httpRegistrationPort"
+      - "$prometheusPort:6543"
+    depends_on:
+      - authority
 
 EOF
 done
@@ -79,13 +81,15 @@ for i in $(seq 0 $(($numberMixNodes-1))); do
   mixnetPort=$((30000+$globalPortIndex))
   prometheusPort=$((35000+$globalPortIndex))
   cat - >> $composeFile<<EOF
-   node$i:
-     image: hashcloak/meson:$mesonCurrentBranchTag
-     volumes:
-       - /tmp/meson-current/node-$i:/conf
-     ports:
-       - "$mixnetPort:$mixnetPort"
-       - "$prometheusPort:6543"
+  node$i:
+    image: hashcloak/meson:$mesonCurrentBranchTag
+    volumes:
+      - /tmp/meson-current/node-$i:/conf
+    ports:
+      - "$mixnetPort:$mixnetPort"
+      - "$prometheusPort:6543"
+    depends_on:
+      - authority
 
 EOF
 done
