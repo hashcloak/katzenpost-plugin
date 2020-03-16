@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+#set -ex
 source ops/common.sh
 
 # $1 Service to use
@@ -23,5 +23,8 @@ cd /tmp/Meson-client && git fetch && git checkout $mesonClientTestCommit
 docker service ls
 cat /tmp/meson-current/client.toml
 
+cat /tmp/meson-current/nonvoting/authority.toml
 runIntegrationTest gor provider-0 $ETHEREUM_PK
+cat /tmp/meson-current/nonvoting/authority.toml
 runIntegrationTest tbnb provider-1 $BINANCE_PK
+cat /tmp/meson-current/nonvoting/authority.toml
