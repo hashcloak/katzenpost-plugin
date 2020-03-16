@@ -20,7 +20,7 @@ function runIntegrationTest() {
 git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
 cd /tmp/Meson-client && git fetch && git checkout $mesonClientTestCommit
 
-docker service lss
+docker service ls
 cat /tmp/meson-current/cliento.toml
 
 runIntegrationTest gor provider-0 $ETHEREUM_PK
