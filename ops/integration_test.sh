@@ -20,10 +20,5 @@ function runIntegrationTest() {
 git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
 cd /tmp/Meson-client && git fetch && git checkout $mesonClientTestCommit
 
-logFile=/tmp/meson-current/nonvoting/authority.log
-sudo tail -n 40 $logFile
 runIntegrationTest gor provider-0 $ETHEREUM_PK
-sudo tail -n 40 $logFile
-
 runIntegrationTest tbnb provider-1 $BINANCE_PK
-sudo tail -n 40 $logFile
