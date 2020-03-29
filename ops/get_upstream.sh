@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source ops/common.sh
 
+
 function isContainerSameAsMasterTag() {
   container=$(echo -n $1 | cut -f1 -d:)
   tag=$(echo -n $1 | cut -f2 -d:)
@@ -27,20 +28,26 @@ function buildUpstream() {
   name=$1
   tag=$2
   LOG "Building upstream... $name @ $tag"
+
   if [[ "$name" == "authority" ]]; then
     # using nonvoting authority
+    repo=$katzenAuthRepo
     dockerFile=/tmp/$name/Dockerfile.nonvoting
   fi
 
   if [[ "$name" == "server" ]]; then
+    repo=$katzenServerRepo
     dockerFile=/tmp/$name/Dockerfile
+    old="RUN cd cmd/server \&\& go build"
+    new="RUN cd cmd/server \&\& go build -ldflags \"-X 'github.com/katzenpost/core/epochtime.WarpedEpoch=true'\""
   fi
 
   rm -rf /tmp/$name
-  git clone $katzenRepo/$name /tmp/$name > /dev/null
-  cd /tmp/$name
+  git clone $repo /tmp/$name > /dev/null
   git -c advice.detachedHead="false" checkout $tag > /dev/null
-  docker build -f $dockerFile -t hashcloak/$name:$tag /tmp/$name > /dev/null
+  sed -i "s|$old*|$new\n|" $dockerFile
+  cd /tmp/$name
+  docker build -f $dockerFile -t hashcloak/$name:$tag /tmp/$name
   cd -
 }
 
@@ -75,3 +82,4 @@ else
   pullOrBuild $newTag
   retagAsMaster $newTag
 fi
+
