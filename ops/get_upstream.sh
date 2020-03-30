@@ -33,13 +33,15 @@ function buildUpstream() {
     # using nonvoting authority
     repo=$katzenAuthRepo
     dockerFile=/tmp/$name/Dockerfile.nonvoting
+    old="RUN cd cmd/nonvoting \&\& go build"
+    new="RUN cd cmd/nonvoting \&\& go build -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
   fi
 
   if [[ "$name" == "server" ]]; then
     repo=$katzenServerRepo
     dockerFile=/tmp/$name/Dockerfile
     old="RUN cd cmd/server \&\& go build"
-    new="RUN cd cmd/server \&\& go build -ldflags \"-X 'github.com/katzenpost/core/epochtime.WarpedEpoch=true'\""
+    new="RUN cd cmd/server \&\& go build -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
   fi
 
   rm -rf /tmp/$name
