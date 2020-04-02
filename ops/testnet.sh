@@ -69,7 +69,7 @@ for i in $(seq 0 $(($numberProviders-1))); do
       - "$httpRegistrationPort:$httpRegistrationPort"
       - "$prometheusPort:6543"
     depends_on:
-      - authority
+      - "authority"
 
 EOF
 done
@@ -89,7 +89,7 @@ for i in $(seq 0 $(($numberMixNodes-1))); do
       - "$mixnetPort:$mixnetPort"
       - "$prometheusPort:6543"
     depends_on:
-      - authority
+      - "authority"
 
 EOF
 done
