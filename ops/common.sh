@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-
-katzenRepo=https://github.com/katzenpost
-katzenServerRepo="${KATZEN_SERVER_REPO:-${katzenRepo}/server}"
-katzenAuthRepo="${KATZEN_AUTH_REPO:-${katzenRepo}/authority}"
-
-katzenServerMasterHash="${katzenServerMasterHash:-$(git ls-remote --heads $katzenServerRepo | grep master | cut -c1-7)}"
-katzenAuthMasterHash="${katzenAuthMasterHash:-$(git ls-remote --heads $katzenAuthRepo | grep master | cut -c1-7)}"
-
-katzenBaseServerTag="${KATZEN_SERVER_TAG:-master}"
-katzenBaseAuthTag="${KATZEN_AUTH_TAG:-master}"
-
 dockerApiURL=https://hub.docker.com/v2/repositories
+
+katzenAuthRepo="${KATZEN_AUTH_REPO:-https://github.com/katzenpost/authority}"
+katzenBaseAuthBranch="${KATZEN_AUTH_BRANCH:-master}"
+katzenBaseAuthTag="${KATZEN_AUTH_TAG:-$katzenBaseAuthBranch}"
+katzenAuthMasterHash="${katzenAuthMasterHash:-$(git ls-remote --heads $katzenAuthRepo | grep master | cut -c1-7)}"
+katzenAuthContainer=hashcloak/authority
+
+katzenServerRepo="${KATZEN_SERVER_REPO:-https://github.com/katzenpost/server}"
+katzenBaseServerBranch="${KATZEN_SERVER_BRANCH:-master}"
+katzenBaseServerTag="${KATZEN_SERVER_TAG:-$katzenBaseServerBranch}"
+katzenServerMasterHash="${katzenServerMasterHash:-$(git ls-remote --heads $katzenServerRepo | grep master | cut -c1-7)}"
+katzenServerContainer=hashcloak/server
+
+
 
 #TRAVIS_BRANCH
 # - for push builds, or builds not triggered by a pull request, this is the name of the branch.
@@ -24,12 +27,17 @@ else
   BRANCH=$TRAVIS_BRANCH
 fi
 
-mesonCurrentBranchHash="${HASH:-$(git rev-parse HEAD | cut -c1-7)}"
-mesonCurrentBranchTag="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2)}"
+mesonContainer=hashcloak/meson
+mesonBranchHash="${HASH:-$(git rev-parse HEAD | cut -c1-7)}"
+mesonBranchTag="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2 )}"
+# This removes any underscore and dash from the meson container tag 
+mesonBranchTag=$(echo -n $mesonBranchTag | sed 's/[_\-]//g')
 mesonClientTestCommit=${CLIENT_TEST_COMMIT:-master}
 
 function LOG(){
-  echo "LOG: $1"
+  GREEN='\033[0;32m'
+  NO_COLOR='\033[0m'
+  printf "${GREEN}LOG: $1${NO_COLOR}\n"
 }
 
 function containerExistsInCloud() {

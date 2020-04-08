@@ -38,13 +38,14 @@ genconfig -o /tmp/meson-current -n $numberMixNodes -a $publicIP -p $numberProvid
 authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
 generateClientToml true $publicIP $authorityPublicKey
 
+LOG "Creating container $katzenAuthContainer:$katzenBaseAuthTag"
 composeFile=$tempDir/testnet-compose.yml 
 # we will need to add a federated prometheus node here
 cat - > $composeFile<<EOF
 version: "3.7"
 services:
   authority:
-    image: hashcloak/authority:$katzenBaseAuthTag
+    image: $katzenAuthContainer:$katzenBaseAuthTag
     volumes:
       - /tmp/meson-current/nonvoting:/conf
     ports:
@@ -59,9 +60,10 @@ for i in $(seq 0 $(($numberProviders-1))); do
   mixnetPort=$((30000+$globalPortIndex))
   httpRegistrationPort=$((40000+$globalPortIndex))
   prometheusPort=$((35000+$globalPortIndex))
+  LOG "Creating container $mesonContainer:$mesonBranchTag"
   cat - >> $composeFile<<EOF
   provider$i:
-    image: hashcloak/meson:$mesonCurrentBranchTag
+    image: $mesonContainer:$mesonBranchTag
     volumes:
       - /tmp/meson-current/provider-$i:/conf
     ports:
@@ -80,9 +82,10 @@ for i in $(seq 0 $(($numberMixNodes-1))); do
   # which is why static port numbers need to be used
   mixnetPort=$((30000+$globalPortIndex))
   prometheusPort=$((35000+$globalPortIndex))
+  LOG "Creating container $mesonContainer:$mesonBranchTag"
   cat - >> $composeFile<<EOF
   node$i:
-    image: hashcloak/meson:$mesonCurrentBranchTag
+    image: $mesonContainer:$mesonBranchTag
     volumes:
       - /tmp/meson-current/node-$i:/conf
     ports:

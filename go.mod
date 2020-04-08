@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/katzenpost/core v0.0.8-0.20200328221344-83888e422355
 	github.com/katzenpost/server v0.0.8-0.20200329160243-83e5b4bc0f18
 	github.com/stretchr/testify v1.4.0
 	github.com/ugorji/go/codec v1.1.7
