@@ -21,14 +21,14 @@ get_upstream:
 	@touch $(flags)/$@
 
 build_meson:  get_upstream
-	bash ops/build_containers.sh
+	bash ops/build_meson.sh
 	@touch $(flags)/$@
 
 testnet: build_meson genconfig
 	bash ops/testnet.sh
 	sleep 20
 
-integration_test: testnet
+integration_test:
 	bash ops/integration_test.sh
 
 stop_testnet:

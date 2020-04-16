@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+set -e
 source ops/common.sh
 
 # $1 Service to use
@@ -21,4 +21,4 @@ git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
 cd /tmp/Meson-client && git fetch && git checkout $mesonClientTestCommit
 
 runIntegrationTest gor provider-0 $ETHEREUM_PK
-runIntegrationTest tbnb provider-1 $BINANCE_PK
+#runIntegrationTest tbnb provider-1 $BINANCE_PK
