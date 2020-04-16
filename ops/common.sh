@@ -13,6 +13,7 @@ katzenBaseServerTag="${KATZEN_SERVER_TAG:-$katzenBaseServerBranch}"
 katzenServerMasterHash="${katzenServerMasterHash:-$(git ls-remote --heads $katzenServerRepo | grep master | cut -c1-7)}"
 katzenServerContainer=hashcloak/server
 
+warpedBuildFlags="-ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
 
 
 #TRAVIS_BRANCH

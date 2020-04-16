@@ -28,14 +28,14 @@ function buildUpstream() {
     repoUrl=$katzenAuthRepo
     dockerFile=$repoPath/Dockerfile.nonvoting
     old="RUN cd cmd/nonvoting \&\& go build"
-    new="RUN cd cmd/nonvoting \&\& go build -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true\""
+    new="RUN cd cmd/nonvoting \&\& go build $warpedBuildFlags"
   fi
 
   if [[ "$name" == "server" ]]; then
     repoUrl=$katzenServerRepo
     dockerFile=$repoPath/Dockerfile
     old="RUN cd cmd/server \&\& go build"
-    new="RUN cd cmd/server \&\& go build -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
+    new="RUN cd cmd/server \&\& go build $warpedBuildFlags"
   fi
 
   LOG "Building upstream... $container:$tag"
@@ -44,7 +44,6 @@ function buildUpstream() {
   cd $repoPath
   git -c advice.detachedHead="false" checkout $tag > /dev/null
   sed -i "s|$old*|$new\n|" $dockerFile
-  sleep 20
   docker build -f $dockerFile -t $container:$tag $repoPath
   cd -
 }
