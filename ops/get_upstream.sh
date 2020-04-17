@@ -1,25 +1,36 @@
 #!/usr/bin/env bash
 source ops/common.sh
-source ops/build_upstream.sh
 
-branchTag=$katzenAuthContainer:$katzenBaseAuthTag
-hashTag=$katzenAuthContainer:$katzenAuthMasterHash
-compareRemoteContainers $branchTag $hashTag
-if [ $? -eq 0 ]; then
-  docker pull $branchTag
-else
-  pullOrBuild $hashTag
-  LOG "Tagging $katzenAuthContainer: SOURCE: $branchTag TARGET: $hashTag "
-  docker tag $hashTag $branchTag
+# Authority
+namedtag=$katzenauthcontainer:$katzenbaseauthtag
+hashtag=$katzenauthcontainer:$katzenauthmasterhash
+if [[ -n  $warpedbuildflags ]]; then
+  namedtag=$katzenauthcontainer:warped
+  hashtag=$katzenauthcontainer:warped$katzenauthmasterhash
 fi
 
-branchTag=$katzenServerContainer:$katzenBaseServerTag
-hashTag=$katzenServerContainer:$katzenServerMasterHash
-compareRemoteContainers $branchTag $hashTag
+compareRemoteContainers $namedtag $hashtag
 if [ $? -eq 0 ]; then
-  docker pull $branchTag
+  docker pull $namedtag
 else
-  pullOrBuild $hashTag
-  LOG "Taggin $katzenServerMasterHash: SOURCE: $hashTag TARGET: $branchTag"
-  docker tag $hashTag $branchTag
+  bash ops/build_upstream.sh $katzenauthcontainer $katzenauthmasterhash
+  log "tagging $katzenauthcontainer source: $hashtag target: $namedtag"
+  docker tag  $hashtag $namedtag
+fi
+
+# Server
+namedTag=$katzenServerContainer:$katzenBaseServerTag
+hashTag=$katzenServerContainer:$katzenServerMasterHash
+if [[ -n  $warpedBuildFlags ]]; then
+  namedTag=$katzenServerContainer:warped
+  hashTag=$katzenServerContainer:warped$katzenServerMasterHash
+fi
+
+compareRemoteContainers $namedTag $hashTag
+if [ $? -eq 0 ]; then
+  docker pull $namedTag
+else
+  bash ops/build_upstream.sh $katzenServerContainer $katzenServerMasterHash
+  LOG "Tagging $katzenServerContainer SOURCE: $hashTag TARGET: $namedTag"
+  docker tag  $hashTag $namedTag
 fi

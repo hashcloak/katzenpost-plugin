@@ -13,9 +13,6 @@ katzenBaseServerTag="${KATZEN_SERVER_TAG:-$katzenBaseServerBranch}"
 katzenServerMasterHash="${katzenServerMasterHash:-$(git ls-remote --heads $katzenServerRepo | grep master | cut -c1-7)}"
 katzenServerContainer=hashcloak/server
 
-warpedBuildFlags="-ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
-
-
 #TRAVIS_BRANCH
 # - for push builds, or builds not triggered by a pull request, this is the name of the branch.
 # - for builds triggered by a pull request this is the name of the branch targeted by the pull request.
@@ -34,6 +31,10 @@ mesonBranchTag="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2 )}"
 # This removes any underscore and dash from the meson container tag 
 mesonBranchTag=$(echo -n $mesonBranchTag | sed 's/[_\-]//g')
 mesonClientTestCommit=${CLIENT_TEST_COMMIT:-master}
+
+if [[ $mesonBranchTag != "master" ]]; then
+  warpedBuildFlags=" -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
+fi
 
 function LOG(){
   GREEN='\033[0;32m'

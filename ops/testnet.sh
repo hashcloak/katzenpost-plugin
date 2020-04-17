@@ -40,12 +40,17 @@ generateClientToml true $publicIP $authorityPublicKey
 
 LOG "Creating container $katzenAuthContainer:$katzenBaseAuthTag"
 composeFile=$tempDir/testnet-compose.yml 
-# we will need to add a federated prometheus node here
+
+authTag=$katzenBaseAuthTag
+if [[ -n $warpedBuildFlags ]]; then
+  authTag=warped
+fi
+
 cat - > $composeFile<<EOF
 version: "3.7"
 services:
   authority:
-    image: $katzenAuthContainer:$katzenBaseAuthTag
+    image: $katzenAuthContainer:$authTag
     volumes:
       - /tmp/meson-current/nonvoting:/conf
     ports:
