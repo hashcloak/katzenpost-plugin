@@ -34,39 +34,33 @@ function buildUpstream() {
   cd - > /dev/null
 }
 
+function pullOrBuild() {
+  container=$1
+  hashTag=$2
+  namedTag=$3
+  gitHash=$4
+
+  compareRemoteContainers $container:$namedTag $container:$hashTag
+  if [ $? -eq 0 ]; then
+    docker pull $container:$namedTag
+  else
+    buildUpstream $container $gitHash $hashTag
+    LOG "Tagging $container SOURCE: $hashTag target: $namedTag"
+    docker tag $container:$hashTag $container:$namedTag
+  fi
+}
+
 
 # Authority
 hashTag=$katzenAuthBranchHash
 if [[ -n $warpedBuildFlags ]]; then
   hashTag=$katzenAuthWarpedHash
 fi
-
-compareRemoteContainers \
-  $katzenAuthContainer:$katzenAuthTag \
-  $katzenAuthContainer:$hashTag
-
-if [ $? -eq 0 ]; then
-  docker pull $katzenAuthContainer:$katzenAuthTag
-else
-  buildUpstream $katzenAuthContainer $katzenAuthBranchHash $hashTag
-  LOG "Tagging $katzenAuthContainer SOURCE: $hashTag target: $katzenAuthTag"
-  docker tag $katzenAuthContainer:$hashTag $katzenAuthContainer:$katzenAuthTag
-fi
+pullOrBuild $katzenAuthContainer $hashTag $katzenAuthTag $katzenAuthBranchHash
 
 # Server
 hashTag=$katzenServerBranchHash
 if [[ -n $warpedBuildFlags ]]; then
   hashTag=$katzenServerWarpedHash
 fi
-
-compareRemoteContainers \
-  $katzenServerContainer:$katzenServerTag \
-  $katzenServerContainer:$hashTag
-
-if [ $? -eq 0 ]; then
-  docker pull $katzenServerContainer:$katzenServerTag
-else
-  buildUpstream $katzenServerContainer $katzenServerBranchHash $hashTag
-  LOG "Tagging $katzenServerContainer SOURCE: $hashTag target: $katzenServerTag"
-  docker tag $katzenServerContainer:$hashTag $katzenServerContainer:$katzenServerTag
-fi
+pullOrBuild $katzenServerContainer $hashTag $katzenServerTag $katzenServerBranchHash
