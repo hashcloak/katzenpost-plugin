@@ -6,8 +6,7 @@ messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not push
 messagePull=echo "LOG: Success in pulling image: "
 imageNotFound=echo "LOG: Image not found... building: "
 
-clean:
-	rm -rf $(flags)
+default: build_meson
 
 genconfig:
 	go get github.com/hashcloak/genconfig
@@ -40,3 +39,6 @@ push_containers: build_meson
 
 test:
 	go test ./pkg/*
+
+clean:
+	rm -rf $(flags)
