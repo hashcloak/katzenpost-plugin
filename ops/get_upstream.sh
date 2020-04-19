@@ -36,9 +36,12 @@ function buildUpstream() {
 
 function pullOrBuild() {
   container=$1
-  hashTag=$2
-  namedTag=$3
-  gitHash=$4
+  namedTag=$2
+  gitHash=$3
+
+  if [[ -n $warpedBuildFlags ]]; then
+    hashTag=warped_$gitHash
+  fi
 
   compareRemoteContainers $container:$namedTag $container:$hashTag
   if [ $? -eq 0 ]; then
@@ -50,17 +53,5 @@ function pullOrBuild() {
   fi
 }
 
-
-# Authority
-hashTag=$katzenAuthBranchHash
-if [[ -n $warpedBuildFlags ]]; then
-  hashTag=$katzenAuthWarpedHash
-fi
-pullOrBuild $katzenAuthContainer $hashTag $katzenAuthTag $katzenAuthBranchHash
-
-# Server
-hashTag=$katzenServerBranchHash
-if [[ -n $warpedBuildFlags ]]; then
-  hashTag=$katzenServerWarpedHash
-fi
-pullOrBuild $katzenServerContainer $hashTag $katzenServerTag $katzenServerBranchHash
+pullOrBuild $katzenAuthContainer $katzenAuthTag $katzenAuthBranchHash
+pullOrBuild $katzenServerContainer $katzenServerTag $katzenServerBranchHash

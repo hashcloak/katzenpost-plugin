@@ -36,8 +36,6 @@ if [[ $mesonBranchTag != "master" ]]; then
   warpedBuildFlags=" -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
   katzenAuthTag=warped
   katzenServerTag=warped
-  katzenAuthWarpedHash=warped_$katzenAuthBranchHash
-  katzenServerWarpedHash=warped_$katzenServerBranchHash
 fi
 
 function LOG(){
