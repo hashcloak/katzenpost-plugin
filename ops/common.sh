@@ -2,15 +2,15 @@
 dockerApiURL=https://hub.docker.com/v2/repositories
 
 katzenAuthRepo="${KATZEN_AUTH_REPO:-https://github.com/katzenpost/authority}"
-katzenBaseAuthBranch="${KATZEN_AUTH_BRANCH:-master}"
-katzenBaseAuthTag="${KATZEN_AUTH_TAG:-$katzenBaseAuthBranch}"
-katzenAuthMasterHash="${katzenAuthMasterHash:-$(git ls-remote --heads $katzenAuthRepo | grep master | cut -c1-7)}"
+katzenAuthBranch="${KATZEN_AUTH_BRANCH:-master}"
+katzenAuthTag="${KATZEN_AUTH_TAG:-$katzenAuthBranch}"
+katzenAuthBranchHash="${katzenAuthBranchHash:-$(git ls-remote --heads $katzenAuthRepo | grep master | cut -c1-7)}"
 katzenAuthContainer=hashcloak/authority
 
 katzenServerRepo="${KATZEN_SERVER_REPO:-https://github.com/katzenpost/server}"
-katzenBaseServerBranch="${KATZEN_SERVER_BRANCH:-master}"
-katzenBaseServerTag="${KATZEN_SERVER_TAG:-$katzenBaseServerBranch}"
-katzenServerMasterHash="${katzenServerMasterHash:-$(git ls-remote --heads $katzenServerRepo | grep master | cut -c1-7)}"
+katzenServerBranch="${KATZEN_SERVER_BRANCH:-master}"
+katzenServerTag="${KATZEN_SERVER_TAG:-$katzenServerBranch}"
+katzenServerBranchHash="${katzenServerBranchHash:-$(git ls-remote --heads $katzenServerRepo | grep $katzenServerBranch | cut -c1-7)}"
 katzenServerContainer=hashcloak/server
 
 #TRAVIS_BRANCH
@@ -34,6 +34,10 @@ mesonClientTestCommit=${CLIENT_TEST_COMMIT:-master}
 
 if [[ $mesonBranchTag != "master" ]]; then
   warpedBuildFlags=" -ldflags \"-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true\""
+  katzenAuthTag=warped
+  katzenServerTag=warped
+  katzenAuthWarpedHash=warped_$katzenAuthBranchHash
+  katzenServerWarpedHash=warped_$katzenServerBranchHash
 fi
 
 function LOG(){

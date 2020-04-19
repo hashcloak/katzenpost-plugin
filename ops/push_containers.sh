@@ -7,11 +7,11 @@ function pushContainer() {
   fi
 }
 
-pushContainer $katzenAuthContainer:$katzenBaseAuthTag
-pushContainer $katzenAuthContainer:$katzenAuthMasterHash
+pushContainer $katzenAuthContainer:$katzenAuthTag
+pushContainer $katzenAuthContainer:$katzenAuthBranchHash
 
-pushContainer $katzenServerContainer:$katzenBaseServerTag
-pushContainer $katzenServerContainer:$katzenServerMasterHash
+pushContainer $katzenServerContainer:$katzenServerTag
+pushContainer $katzenServerContainer:$katzenServerBranchHash
 
 pushContainer $mesonContainer:$mesonCurrentBranchHash
 pushContainer $mesonContainer:$mesonCurrentBranchTag

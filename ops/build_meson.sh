@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source ops/common.sh
 
-baseTag=$katzenBaseServerBranch
+baseTag=$katzenServerBranch
 if [[ -n $warpedBuildFlags ]]; then
   baseTag=warped
 fi

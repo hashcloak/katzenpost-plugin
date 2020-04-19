@@ -38,19 +38,14 @@ genconfig -o /tmp/meson-current -n $numberMixNodes -a $publicIP -p $numberProvid
 authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
 generateClientToml true $publicIP $authorityPublicKey
 
-LOG "Creating container $katzenAuthContainer:$katzenBaseAuthTag"
+LOG "Creating container $katzenAuthContainer:$katzenAuthTag"
 composeFile=$tempDir/testnet-compose.yml 
-
-authTag=$katzenBaseAuthTag
-if [[ -n $warpedBuildFlags ]]; then
-  authTag=warped
-fi
 
 cat - > $composeFile<<EOF
 version: "3.7"
 services:
   authority:
-    image: $katzenAuthContainer:$authTag
+    image: $katzenAuthContainer:$katzenAuthTag
     volumes:
       - /tmp/meson-current/nonvoting:/conf
     ports:
