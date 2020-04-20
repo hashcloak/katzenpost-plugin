@@ -24,8 +24,9 @@ function runIntegrationTest() {
 }
 
 rm -rf /tmp/Meson-client
- git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client
- cd /tmp/Meson-client && git fetch && git checkout $mesonClientTestCommit
+git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client
+cd /tmp/Meson-client
+git -c advice.detachedHead="false" checkout $mesonClientTestCommit
 
 runIntegrationTest gor provider-0 $ETHEREUM_PK
 #runIntegrationTest tbnb provider-1 $BINANCE_PK

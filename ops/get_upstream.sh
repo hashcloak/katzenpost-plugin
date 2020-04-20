@@ -28,7 +28,7 @@ function buildUpstream() {
   LOG "Building upstream... $container:$tag"
   rm -rf $repoPath && git clone $repoUrl $repoPath > /dev/null
   cd $repoPath > /dev/null
-  git reset --hard $gitHash > /dev/null
+  git -c advice.detachedHead="false" checkout $gitHash > /dev/null
   sed -i "s|$old*|$new|" $dockerFile
   docker build -f $dockerFile -t $container:$tag $repoPath
   cd - > /dev/null
