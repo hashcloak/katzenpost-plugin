@@ -21,5 +21,5 @@ EOF
 
 LOG "Using $katzenServerContainer:$katzenServerTag as FROM container. Building $mesonContainer:$mesonBranchHash"
 docker build --no-cache -f /tmp/meson.Dockerfile -t $mesonContainer:$mesonBranchHash .
-LOG "Tagging $mesonContainer: SOURCE: $mesonBranchHash TARGET: $mesonBranchTag "
-docker tag $mesonContainer:$mesonBranchHash $mesonContainer:$mesonBranchTag
+LOG "Tagging $mesonContainer: SOURCE: $mesonBranchHash TARGET: $mesonBranch"
+docker tag $mesonContainer:$mesonBranchHash $mesonContainer:$mesonBranch

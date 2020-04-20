@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 dockerApiURL=https://hub.docker.com/v2/repositories
 
+katzenAuthContainer=hashcloak/authority
 katzenAuthRepo="${KATZEN_AUTH_REPO:-https://github.com/katzenpost/authority}"
 katzenAuthBranch="${KATZEN_AUTH_BRANCH:-master}"
 katzenAuthTag="${KATZEN_AUTH_TAG:-$katzenAuthBranch}"
-katzenAuthBranchHash="${katzenAuthBranchHash:-$(git ls-remote --heads $katzenAuthRepo | grep master | cut -c1-7)}"
-katzenAuthContainer=hashcloak/authority
+katzenAuthBranchHash="${katzenAuthBranchHash:-$(git ls-remote --heads $katzenAuthRepo | grep $katzenAuthBranch | cut -c1-7)}"
 
+katzenServerContainer=hashcloak/server
 katzenServerRepo="${KATZEN_SERVER_REPO:-https://github.com/katzenpost/server}"
 katzenServerBranch="${KATZEN_SERVER_BRANCH:-master}"
 katzenServerTag="${KATZEN_SERVER_TAG:-$katzenServerBranch}"
 katzenServerBranchHash="${katzenServerBranchHash:-$(git ls-remote --heads $katzenServerRepo | grep $katzenServerBranch | cut -c1-7)}"
-katzenServerContainer=hashcloak/server
 
 #TRAVIS_BRANCH
 # - for push builds, or builds not triggered by a pull request, this is the name of the branch.
@@ -26,13 +26,13 @@ else
 fi
 
 mesonContainer=hashcloak/meson
-mesonBranchHash="${HASH:-$(git rev-parse HEAD | cut -c1-7)}"
-mesonBranchTag="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2 )}"
+mesonBranch="${BRANCH:-$(git branch | grep \* | cut -d' ' -f2 )}"
 # This removes any underscore and dash from the meson container tag 
-mesonBranchTag=$(echo -n $mesonBranchTag | sed 's/[_\-]//g')
+mesonBranch=$(echo -n $mesonBranch | sed 's/[_\-]//g')
+mesonBranchHash="${HASH:-$(git rev-parse HEAD | cut -c1-7)}"
 mesonClientTestCommit=${CLIENT_TEST_COMMIT:-master}
 
-if [[ $mesonBranchTag != "master" ]]; then
+if [[ $mesonBranch != "master" ]]; then
   warpedBuildFlags=' -ldflags "-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true"'
   katzenAuthTag=warped
   katzenServerTag=warped

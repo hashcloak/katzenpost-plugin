@@ -60,10 +60,10 @@ for i in $(seq 0 $(($numberProviders-1))); do
   mixnetPort=$((30000+$globalPortIndex))
   httpRegistrationPort=$((40000+$globalPortIndex))
   prometheusPort=$((35000+$globalPortIndex))
-  LOG "Creating container $mesonContainer:$mesonBranchTag"
+  LOG "Creating container $mesonContainer:$mesonBranch"
   cat - >> $composeFile<<EOF
   provider$i:
-    image: $mesonContainer:$mesonBranchTag
+    image: $mesonContainer:$mesonBranch
     volumes:
       - /tmp/meson-current/provider-$i:/conf
     ports:
@@ -82,10 +82,10 @@ for i in $(seq 0 $(($numberMixNodes-1))); do
   # which is why static port numbers need to be used
   mixnetPort=$((30000+$globalPortIndex))
   prometheusPort=$((35000+$globalPortIndex))
-  LOG "Creating container $mesonContainer:$mesonBranchTag"
+  LOG "Creating container $mesonContainer:$mesonBranch"
   cat - >> $composeFile<<EOF
   node$i:
-    image: $mesonContainer:$mesonBranchTag
+    image: $mesonContainer:$mesonBranch
     volumes:
       - /tmp/meson-current/node-$i:/conf
     ports:
