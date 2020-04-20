@@ -19,19 +19,21 @@ get_upstream:
 	bash ops/get_upstream.sh
 	@touch $(flags)/$@
 
-build_meson:  get_upstream
+build_meson: get_upstream
 	bash ops/build_meson.sh
 	@touch $(flags)/$@
 
 testnet: build_meson genconfig
 	bash ops/testnet.sh
+	@touch $(flags)/$@
 	sleep 20
 
-integration_test:
+integration_test: testnet
 	bash ops/integration_test.sh
 
 stop_testnet:
 	docker stack rm mixnet
+	rm $(flags)/testnet
 
 push_containers: build_meson
 	bash ops/push_containers.sh
