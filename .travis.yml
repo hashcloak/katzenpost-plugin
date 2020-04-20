@@ -13,7 +13,7 @@ script:
 deploy:
   - provider: script
     script:
-      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push_containers
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push
     on:
       all_branches: true
 

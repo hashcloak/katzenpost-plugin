@@ -35,7 +35,7 @@ stop_testnet:
 	docker stack rm mixnet
 	rm $(flags)/testnet
 
-push_containers: build_meson
+push: build_meson
 	bash ops/push_containers.sh
 	@touch $(flags)/$@
 
