@@ -4,12 +4,9 @@ set -e
 
 cat - > /tmp/meson.Dockerfile<<EOF
 FROM golang:alpine AS builder
-
-# Install git & make
 RUN apk update && \
     apk add --no-cache git make ca-certificates && \
     update-ca-certificates
-
 WORKDIR /go/Meson
 COPY . .
 RUN go build -o Meson cmd/main.go 
