@@ -39,9 +39,9 @@ if [[ $mesonBranch != "master" ]]; then
 fi
 
 function LOG(){
-  GREEN='\033[0;32m'
+  BLUE='\033[1;34m'
   NO_COLOR='\033[0m'
-  printf "${GREEN}LOG: $1${NO_COLOR}\n"
+  printf "${BLUE}LOG: $1${NO_COLOR}\n"
 }
 
 function containerExistsInCloud() {
