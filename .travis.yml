@@ -16,8 +16,3 @@ deploy:
       - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push
     on:
       all_branches: true
-
-cache:
-  directories:
-    - $HOME/.cache/go-build
-    - $GOPATH/pkg/mod
