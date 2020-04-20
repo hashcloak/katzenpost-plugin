@@ -1,17 +1,8 @@
 #!/usr/bin/env bash
 source ops/common.sh
-
-function pushContainer() {
-  if ! containerExistsInCloud $1; then
-    docker push $container
-  fi
-}
-
-pushContainer $katzenAuthContainer:$katzenAuthTag
-pushContainer $katzenAuthContainer:$katzenAuthBranchHash
-
-pushContainer $katzenServerContainer:$katzenServerTag
-pushContainer $katzenServerContainer:$katzenServerBranchHash
-
-pushContainer $mesonContainer:$mesonCurrentBranchHash
-pushContainer $mesonContainer:$mesonCurrentBranchTag
+docker push $katzenAuthContainer:$katzenAuthTag
+docker push $katzenAuthContainer:$katzenAuthBranchHash
+docker push $katzenServerContainer:$katzenServerTag
+docker push $katzenServerContainer:$katzenServerBranchHash
+docker push $mesonContainer:$mesonCurrentBranchHash
+docker push $mesonContainer:$mesonCurrentBranchTag
