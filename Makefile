@@ -8,6 +8,9 @@ imageNotFound=echo "LOG: Image not found... building: "
 
 default: build_meson
 
+clean:
+	rm -rf $(flags)
+
 genconfig:
 	go get github.com/hashcloak/genconfig
 	sed -i '/.genconfig*/d' go.mod # we don't want to add genconfig to go modules
@@ -41,6 +44,3 @@ push: build_meson
 
 test:
 	go test ./pkg/*
-
-clean:
-	rm -rf $(flags)
