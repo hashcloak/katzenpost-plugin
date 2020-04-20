@@ -43,8 +43,7 @@ function pullOrBuild() {
     hashTag=warped_$gitHash
   fi
 
-  compareRemoteContainers $container:$namedTag $container:$hashTag
-  if [ $? -eq 0 ]; then
+  if compareRemoteContainers $container:$namedTag $container:$hashTag; then
     docker pull $container:$namedTag
   else
     buildUpstream $container $gitHash $hashTag

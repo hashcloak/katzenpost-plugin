@@ -2,8 +2,7 @@
 source ops/common.sh
 set -e
 
-dockerFile=/tmp/meson.Dockerfile
-cat - > $dockerFile<<EOF
+cat - > /tmp/meson.Dockerfile<<EOF
 FROM golang:alpine AS builder
 
 # Install git & make
@@ -21,6 +20,6 @@ ENTRYPOINT /go/bin/server -f /conf/katzenpost.toml
 EOF
 
 LOG "Using $katzenServerContainer:$katzenServerTag as FROM container. Building $mesonContainer:$mesonBranchHash"
-docker build --no-cache -f $dockerFile -t $mesonContainer:$mesonBranchHash .
+docker build --no-cache -f /tmp/meson.Dockerfile -t $mesonContainer:$mesonBranchHash .
 LOG "Tagging $mesonContainer: SOURCE: $mesonBranchHash TARGET: $mesonBranchTag "
 docker tag $mesonContainer:$mesonBranchHash $mesonContainer:$mesonBranchTag
