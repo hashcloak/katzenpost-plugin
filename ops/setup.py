@@ -36,7 +36,7 @@ DEFAULT_VALUES = {
 
 def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
-    return sp.check_output(arguments).decode("utf-7").split('\t')[0]
+    return sp.check_output(arguments).decode("utf-8").split('\t')[0]
 
 def getLocalGitHash():
     arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
@@ -46,9 +46,16 @@ def getLocalGitHash():
 
     return gitHash
 
+def expandDictionary(mainDictionary):
+    tempList = []
+    for key, value in mainDictionary.items():
+        if type(value) == dict:
+            newList = expandDictionary(value)
+            for item in newList:
+                tempList.append(key+"_"+item)
+        else:
+            tempList.append(key)
 
-def getListOfEnvironmentVariables(defaultValuesDict):
-    print()
+    return tempList
 
-
-getListOfEnvironmentVariables(DEFAULT_VALUES)
+print("Expand", expandDictionary(DEFAULT_VALUES))
