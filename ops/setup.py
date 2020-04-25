@@ -3,6 +3,7 @@ import os
 import subprocess as sp
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
+gitHashLength=7
 
 DEFAULT_VALUES = {
     "KATZEN": {
@@ -29,7 +30,9 @@ DEFAULT_VALUES = {
             "GITHASH": "",
         },
         "CLIENT":{
-            "TEST_COMMIT": "master"
+            "TEST": {
+                "COMMIT": "master"
+            }
         }
     },
 }
@@ -38,11 +41,30 @@ def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
     return sp.check_output(arguments).decode("utf-8").split('\t')[0]
 
+def getLocalGitBranch():
+    try:
+        if os.environ['TRAVIS_EVENT_TYPE'] == "pull_request":
+            gitBranch = os.environ['TRAVIS_PULL_REQUEST_BRANCH']
+        else:
+            gitBranch = os.environ['TRAVIS_BRANCH']
+
+    except KeyError:
+        arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+        gitBranch = sp.check_output(arguments).decode("utf-8").strip()
+
+    return gitBranch
+
+
 def getLocalGitHash():
-    arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-    gitHash = sp.check_output(arguments).decode("utf-8").split('\t')[0]
-    if os.environ['TRAVIS_EVENT_TYPE'] == "pull_request":
-        gitHash = os.environ['TRAVIS_PULL_REQUEST_SHA']
+    try:
+        if os.environ['TRAVIS_EVENT_TYPE'] == "pull_request":
+            githash = os.environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
+        else:
+            githash = os.environ['TRAVIS_COMMIT'][:gitHashLength]
+
+    except KeyError:
+        arguments = ["git", "rev-parse", "HEAD"]
+        gitHash = sp.check_output(arguments).decode("utf-8")[:gitHashLength].strip()
 
     return gitHash
 
