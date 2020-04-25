@@ -23,7 +23,7 @@ DEFAULT_VALUES = {
         },
     },
     "HASHCLOAK": {
-        "PLUGIN": {
+        "MESON": {
             "CONTAINER": "hashcloak/meson",
             "DOCKERTAG": "master",
             "BRANCH": "",
@@ -39,7 +39,7 @@ DEFAULT_VALUES = {
 
 def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
-    return sp.check_output(arguments).decode("utf-8").split('\t')[0]
+    return sp.check_output(arguments).decode("utf-8").split('\t')[0][:gitHashLength]
 
 def getLocalGitBranch():
     try:
@@ -80,4 +80,40 @@ def expandDictionary(mainDictionary):
 
     return tempList
 
-print("Expand", expandDictionary(DEFAULT_VALUES))
+def getNestedValue(dictionary, *args):
+    if args and dictionary:
+        element  = args[0]
+        if element:
+            value = dictionary.get(element)
+            return value if len(args) == 1 else getNestedValue(value, *args[1:])
+
+def setNestedValue(dictionary, keys, value):
+    for key in keys[-1]:
+        pass
+
+    print("set nested value: ", keys, value)
+
+def getEnvironmentVariables():
+    for environmentVar in expandDictionary(DEFAULT_VALUES):
+        try:
+            setNestedValue(
+                DEFAULT_VALUES,
+                environmentVar.split("_"),
+                os.environ[environmentVar],
+            )
+        except KeyError:
+            pass
+
+    repo = DEFAULT_VALUES["KATZEN"]["AUTH"]["REPOSITORY"]
+    branch = DEFAULT_VALUES["KATZEN"]["AUTH"]["BRANCH"]
+    DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] = getRemoteGitHash(repo, branch)
+
+    repo = DEFAULT_VALUES["KATZEN"]["SERVER"]["REPOSITORY"]
+    branch = DEFAULT_VALUES["KATZEN"]["SERVER"]["BRANCH"]
+    DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"] = getRemoteGitHash(repo, branch)
+
+    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"] = getLocalGitHash()
+    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = getLocalGitBranch()
+
+getEnvironmentVariables()
+print(DEFAULT_VALUES)
