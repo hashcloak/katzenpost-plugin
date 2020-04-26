@@ -51,10 +51,24 @@ def doesContainerExistsInCloud(name, tag):
 
 def getContainerInfo(name, tag):
     if not doesContainerExistsInCloud(name, tag):
-        return {}
+        return None
 
-    response = urllib.request.urlopen("{}/{}/tags/{}".format(dockerApiUrl, name, tag)).read()
-    return json.loads(response.decode("utf-8"))
+    url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
+    return json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
+
+def compareRemoteContainers(ctrOne, ctrTwo):
+    nameOne = ctrOne.split(":")[0]
+    tagOne = ctrOne.split(":")[1]
+    nameTwo = ctrTwo.split(":")[0]
+    tagTwo = ctrTwo.split(":")[1]
+
+    if not doesContainerExistsInCloud(nameOne, tagTwo) or \
+            not doesContainerExistsInCloud(nameTwo, tagTwo):
+        return False
+
+    return getContainerInfo(nameOne, tagOne)['images'][0]['digest'] == \
+            getContainerInfo(nameTwo, tagTwo)['images'][0]['digest']
+
 
 def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
@@ -145,5 +159,6 @@ def updateDefaults():
         DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"] = "warped"
 
 
-print(getContainerInfo("hashcloak/meson", "devops-restructure")['images'][0]['digest'])
-print(getContainerInfo("hashcloak/server", "master"))
+print(compareRemoteContainers("hashcloak/meson:devops-restructure", "hashcloak/meson:devops-restructure"))
+print(compareRemoteContainers("hashcloak/meson:devops-restructure", "hashcloak/meson:master"))
+print(compareRemoteContainers("hashcloak/server:warped", "hashcloak/meson:master"))
