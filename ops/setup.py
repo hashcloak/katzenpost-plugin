@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
 import subprocess as sp
+import urllib.request
+import json
 import pprint
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
@@ -38,6 +40,21 @@ DEFAULT_VALUES = {
         }
     },
 }
+
+def doesContainerExistsInCloud(name, tag):
+    try:
+        urllib.request.urlopen("{}/{}/tags/{}".format(dockerApiUrl, name, tag)).read()
+    except urllib.error.HTTPError:
+        return False
+
+    return True
+
+def getContainerInfo(name, tag):
+    if not doesContainerExistsInCloud(name, tag):
+        return {}
+
+    response = urllib.request.urlopen("{}/{}/tags/{}".format(dockerApiUrl, name, tag)).read()
+    return json.loads(response.decode("utf-8"))
 
 def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
@@ -127,12 +144,6 @@ def updateDefaults():
         DEFAULT_VALUES["KATZEN"]["SERVER"]["DOCKERTAG"] = "warped"
         DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"] = "warped"
 
-pp = pprint.PrettyPrinter(indent=2)
-pp.pprint(DEFAULT_VALUES)
 
-print()
-updateDefaults()
-print()
-
-pp = pprint.PrettyPrinter(indent=2)
-pp.pprint(DEFAULT_VALUES)
+print(getContainerInfo("hashcloak/meson", "devops-restructure")['images'][0]['digest'])
+print(getContainerInfo("hashcloak/server", "master"))
