@@ -82,38 +82,44 @@ def expandDictionary(mainDictionary):
 
 def getNestedValue(dictionary, *args):
     if args and dictionary:
-        element  = args[0]
-        if element:
-            value = dictionary.get(element)
+        subkey  = args[0]
+        if subkey:
+            value = dictionary.get(subkey)
             return value if len(args) == 1 else getNestedValue(value, *args[1:])
 
-def setNestedValue(dictionary, keys, value):
-    for key in keys[-1]:
-        pass
+def setNestedValue(dictionary, value, keys):
+    if keys and dictionary:
+        if len(keys) == 1:
+            dictionary[keys[0]] = value
+        else:
+            setNestedValue(dictionary.get(keys[0]), value, keys[1:])
 
-    print("set nested value: ", keys, value)
 
 def getEnvironmentVariables():
     for environmentVar in expandDictionary(DEFAULT_VALUES):
         try:
             setNestedValue(
                 DEFAULT_VALUES,
-                environmentVar.split("_"),
                 os.environ[environmentVar],
+                environmentVar.split("_"),
             )
         except KeyError:
             pass
 
     repo = DEFAULT_VALUES["KATZEN"]["AUTH"]["REPOSITORY"]
     branch = DEFAULT_VALUES["KATZEN"]["AUTH"]["BRANCH"]
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] = getRemoteGitHash(repo, branch)
+    value = DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] 
+    if value != "":
+        DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] = getRemoteGitHash(repo, branch)
 
+"""
     repo = DEFAULT_VALUES["KATZEN"]["SERVER"]["REPOSITORY"]
     branch = DEFAULT_VALUES["KATZEN"]["SERVER"]["BRANCH"]
     DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"] = getRemoteGitHash(repo, branch)
 
     DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"] = getLocalGitHash()
     DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = getLocalGitBranch()
+"""
 
 getEnvironmentVariables()
 print(DEFAULT_VALUES)
