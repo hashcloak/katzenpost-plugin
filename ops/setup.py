@@ -5,6 +5,7 @@ import pprint
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 gitHashLength=7
+warpedBuildFlags='-ldflags "-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true"'
 
 DEFAULT_VALUES = {
     "KATZEN": {
@@ -120,8 +121,11 @@ def updateDefaults():
     value = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"]
     DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"] = value if value else getLocalGitHash()
     value = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"]
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = value if value else getLocalGitHash()
+    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = value if value else getLocalGitBranch()
 
+    if DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] != "master":
+        DEFAULT_VALUES["KATZEN"]["SERVER"]["DOCKERTAG"] = "warped"
+        DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"] = "warped"
 
 pp = pprint.PrettyPrinter(indent=2)
 pp.pprint(DEFAULT_VALUES)
