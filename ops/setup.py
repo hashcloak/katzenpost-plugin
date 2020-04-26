@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import subprocess as sp
+import pprint
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 gitHashLength=7
@@ -82,7 +83,7 @@ def expandDictionary(mainDictionary):
 
 def getNestedValue(dictionary, *args):
     if args and dictionary:
-        subkey  = args[0]
+        subkey = args[0]
         if subkey:
             value = dictionary.get(subkey)
             return value if len(args) == 1 else getNestedValue(value, *args[1:])
@@ -95,7 +96,7 @@ def setNestedValue(dictionary, value, keys):
             setNestedValue(dictionary.get(keys[0]), value, keys[1:])
 
 
-def getEnvironmentVariables():
+def updateDefaults():
     for environmentVar in expandDictionary(DEFAULT_VALUES):
         try:
             setNestedValue(
@@ -109,17 +110,25 @@ def getEnvironmentVariables():
     repo = DEFAULT_VALUES["KATZEN"]["AUTH"]["REPOSITORY"]
     branch = DEFAULT_VALUES["KATZEN"]["AUTH"]["BRANCH"]
     value = DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] 
-    if value != "":
-        DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] = getRemoteGitHash(repo, branch)
+    DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] = value if value else getRemoteGitHash(repo, branch)
 
-"""
     repo = DEFAULT_VALUES["KATZEN"]["SERVER"]["REPOSITORY"]
     branch = DEFAULT_VALUES["KATZEN"]["SERVER"]["BRANCH"]
-    DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"] = getRemoteGitHash(repo, branch)
+    value = DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"]
+    DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"] = value if value else getRemoteGitHash(repo, branch)
 
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"] = getLocalGitHash()
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = getLocalGitBranch()
-"""
+    value = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"]
+    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"] = value if value else getLocalGitHash()
+    value = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"]
+    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = value if value else getLocalGitHash()
 
-getEnvironmentVariables()
-print(DEFAULT_VALUES)
+
+pp = pprint.PrettyPrinter(indent=2)
+pp.pprint(DEFAULT_VALUES)
+
+print()
+updateDefaults()
+print()
+
+pp = pprint.PrettyPrinter(indent=2)
+pp.pprint(DEFAULT_VALUES)
