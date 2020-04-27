@@ -16,7 +16,7 @@ genconfig:
 
 get_upstream:
 	python3 ops/get_upstream.py
-	#@touch $(flags)/$@
+	@touch $(flags)/$@
 
 build_meson: get_upstream
 	python3 ops/build_meson.py
