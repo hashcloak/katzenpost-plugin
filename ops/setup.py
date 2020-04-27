@@ -158,7 +158,4 @@ def updateDefaults():
         DEFAULT_VALUES["KATZEN"]["SERVER"]["DOCKERTAG"] = "warped"
         DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"] = "warped"
 
-
-print(compareRemoteContainers("hashcloak/meson:devops-restructure", "hashcloak/meson:devops-restructure"))
-print(compareRemoteContainers("hashcloak/meson:devops-restructure", "hashcloak/meson:master"))
-print(compareRemoteContainers("hashcloak/server:warped", "hashcloak/meson:master"))
+updateDefaults()
