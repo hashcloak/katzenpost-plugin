@@ -72,7 +72,7 @@ def compareRemoteContainers(ctrOne, ctrTwo):
 
 def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
-    return sp.check_output(arguments).decode("utf-8").split('\t')[0][:gitHashLength]
+    return sp.check_output(arguments, encoding="utf-8").split('\t')[0][:gitHashLength]
 
 def getLocalGitBranch():
     try:
@@ -83,7 +83,7 @@ def getLocalGitBranch():
 
     except KeyError:
         arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-        gitBranch = sp.check_output(arguments).decode("utf-8").strip()
+        gitBranch = sp.check_output(arguments, encoding="utf-8").strip()
 
     return gitBranch
 
@@ -97,7 +97,7 @@ def getLocalGitHash():
 
     except KeyError:
         arguments = ["git", "rev-parse", "HEAD"]
-        gitHash = sp.check_output(arguments).decode("utf-8")[:gitHashLength].strip()
+        gitHash = sp.check_output(arguments, encoding="utf-8")[:gitHashLength].strip()
 
     return gitHash
 
