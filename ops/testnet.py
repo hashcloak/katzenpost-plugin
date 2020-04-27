@@ -31,9 +31,9 @@ args = [
 
 # We could try to capture the paths that this command
 # outputs to use in the concatenation of the compose file
-# This that there is a single source of truth of where the config
-# files should be sourced from instead of manually counting in
-# the loops
+# This makes it that there is a single source of truth of where the config
+# files should be sourced from instead of manually counting in the loops
+#
 # Example of the output is:
 # 2020/04/27 22:56:43 saveCfg of /tmp/meson-2iybfqej/nonvoting/authority.toml
 # 2020/04/27 22:56:43 saveCfg of /tmp/meson-2iybfqej/provider-0/katzenpost.toml
