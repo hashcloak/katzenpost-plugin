@@ -28,13 +28,12 @@ def buildUpstream(container, tag, gitHash):
     
     sp.run(["git", "clone", repoUrl, repoPath], check=True)
     os.chdir(repoPath)
-    sp.run(["git", "checkout", gitHash], check=True)
+    sp.run(["git", "checkout", gitHash], check=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
     if "warped" in tag: updateDockerFile(dockerFile)
     #print(sp.check_output(["cat", dockerFile]).decode("utf-8"))
     args = ["docker", "build", "-t", "{}:{}".format(container, tag), "-f", dockerFile, repoPath]
     sp.run(args, check=True)
-
 
 def pullOrBuild(container, tag, gitHash):
 
@@ -43,7 +42,9 @@ def pullOrBuild(container, tag, gitHash):
     if compareRemoteContainers(container+":"+tag, container+":"+hashTag):
         sp.run(["docker", "pull", "{}:{}".format(container, hashTag)], check=True)
     else:
+        print("\nLOG: Building {}:{}\n".format(container, hashTag))
         buildUpstream(container, hashTag, gitHash)
+        print("\nLOG: Tagging {}:{}\n".format(container, hashTag))
         arguments = [
                 "docker",
                 "tag",
