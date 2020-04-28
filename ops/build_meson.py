@@ -1,28 +1,28 @@
-import tempfile
-import os
-import subprocess as sp
+from tempfile import NamedTemporaryFile
+from os import path, curdir
+from subprocess import run
 
-from setup import *
+from setup import CONFIG
 
-currentPath = os.path.abspath(os.curdir)
-dockerFile = os.path.join(currentPath, "Dockerfile")
-tmpDockerFile = tempfile.NamedTemporaryFile().name
+currentPath = path.abspath(curdir)
+dockerFile = path.join(currentPath, "Dockerfile")
+tmpDockerFile = NamedTemporaryFile().name
 
 with open(dockerFile, 'r') as df, open(tmpDockerFile, 'w+') as tmpdf:
     for line in df:
-        if DEFAULT_VALUES["KATZEN"]["SERVER"]["CONTAINER"] in line:
+        if CONFIG["SERVER"]["CONTAINER"] in line:
             line = "FROM {}:{}\n".format(
-                    DEFAULT_VALUES["KATZEN"]["SERVER"]["CONTAINER"],
-                    DEFAULT_VALUES["KATZEN"]["SERVER"]["DOCKERTAG"],
+                    CONFIG["SERVER"]["CONTAINER"],
+                    CONFIG["SERVER"]["TAGS"]["NAMED"],
                 )
 
         tmpdf.write(line)
 
-container = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["CONTAINER"]
-tag = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"]
+container = CONFIG["MESON"]["CONTAINER"]
+tag = CONFIG["MESON"]["GITHASH"]
 
-print("\nLOG: Building Meson with {} tag\n".format(tag))
-args = [
+print("\nLOG: Building {}:{}\n".format(container, tag))
+run([
     "docker",
     "build",
     "-t",
@@ -30,13 +30,18 @@ args = [
     "-f",
     tmpDockerFile,
     currentPath
-]
-sp.run(args, check=True)
+], check=True)
 
-args = [
+print("\nLOG: Retagging {} from: {} to: {} tag\n".format(
+        container,
+        tag,
+        CONFIG["MESON"]["BRANCH"],
+    )
+)
+
+run([
     "docker",
     "tag",
     "{}:{}".format(container, tag),
-    "{}:{}".format(container, DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"]),
-]
-sp.run(args, check=True)
+    "{}:{}".format(container, CONFIG["MESON"]["BRANCH"]),
+])

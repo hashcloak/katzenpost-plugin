@@ -1,9 +1,10 @@
-import tempfile
 import fileinput
-import os
-import subprocess as sp
 
-from setup import DEFAULT_VALUES, compareRemoteContainers, warpedBuildFlags
+from os import path, chdir
+from subprocess import run
+from tempfile import gettempdir
+
+from setup import CONFIG, compareRemoteContainers, warpedBuildFlags, checkoutRepo
 
 def updateDockerFile(dockerFile):
     for line in fileinput.input(dockerFile, inplace=True):
@@ -16,52 +17,55 @@ def updateDockerFile(dockerFile):
 def buildUpstream(container, tag, gitHash):
 
     name = container.split("/")[1]
-    repoPath = os.path.join(tempfile.TemporaryDirectory().name, name)
+    repoPath = path.join(gettempdir(), name)
 
     if name == "authority":
-        dockerFile = os.path.join(repoPath, "Dockerfile.nonvoting")
-        repoUrl = DEFAULT_VALUES["KATZEN"]["AUTH"]["REPOSITORY"]
+        dockerFile = path.join(repoPath, "Dockerfile.nonvoting")
+        repoUrl = CONFIG["AUTH"]["REPOSITORY"]
     elif name =="server":
-        dockerFile = os.path.join(repoPath, "Dockerfile")
-        repoUrl = DEFAULT_VALUES["KATZEN"]["SERVER"]["REPOSITORY"]
+        dockerFile = path.join(repoPath, "Dockerfile")
+        repoUrl = CONFIG["SERVER"]["REPOSITORY"]
 
-    
-    sp.run(["git", "clone", repoUrl, repoPath], check=True)
-    os.chdir(repoPath)
-    sp.run(["git", "checkout", gitHash], check=True, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+    checkoutRepo(repoPath, repoUrl, gitHash.split("_")[-1])
 
-    if "warped" in tag: updateDockerFile(dockerFile)
-    #print(sp.check_output(["cat", dockerFile]).decode("utf-8"))
-    args = ["docker", "build", "-t", "{}:{}".format(container, tag), "-f", dockerFile, repoPath]
-    sp.run(args, check=True)
+    if CONFIG["WARPED"]: updateDockerFile(dockerFile)
+    #print(sp.run(["cat", dockerFile]))
+    run([
+        "docker",
+        "build",
+        "-t",
+        "{}:{}".format(container, tag),
+        "-f", dockerFile,
+        repoPath
+    ])
 
-def pullOrBuild(container, tag, gitHash):
+def pullOrBuild(container, namedTag, hashTag):
 
-    hashTag = "warped_"+gitHash if tag == "warped" else tag
-
-    if compareRemoteContainers(container+":"+tag, container+":"+hashTag):
-        sp.run(["docker", "pull", "{}:{}".format(container, hashTag)], check=True)
+    if compareRemoteContainers(container+":"+namedTag, container+":"+hashTag):
+        run([
+            "docker",
+            "pull",
+            "{}:{}".format(container, namedTag)
+        ], check=True)
     else:
         print("\nLOG: Building {}:{}\n".format(container, hashTag))
-        buildUpstream(container, hashTag, gitHash)
-        print("\nLOG: Tagging {}:{}\n".format(container, hashTag))
-        arguments = [
-                "docker",
-                "tag",
-                "{}:{}".format(container, hashTag),
-                "{}:{}".format(container, tag),
-            ]
-        sp.run(arguments, check=True)
+        buildUpstream(container, hashTag, hashTag)
+        print("\nLOG: Retagging {} from: {} to: {} tag\n".format(
+                container,
+                hashTag,
+                namedTag,
+            )
+        )
+        run([
+            "docker",
+            "tag",
+            "{}:{}".format(container, hashTag),
+            "{}:{}".format(container, namedTag),
+        ], check=True)
 
-
-
-pullOrBuild(
-    DEFAULT_VALUES["KATZEN"]["SERVER"]["CONTAINER"],
-    DEFAULT_VALUES["KATZEN"]["SERVER"]["DOCKERTAG"],
-    DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"],
-)
-pullOrBuild(
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["CONTAINER"],
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"],
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"],
-)
+for key in ["AUTH", "SERVER"]:
+    pullOrBuild(
+        CONFIG[key]["CONTAINER"],
+        CONFIG[key]["TAGS"]["NAMED"],
+        CONFIG[key]["TAGS"]["HASH"]
+    )

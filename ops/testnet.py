@@ -1,10 +1,10 @@
 from os import path, mkdir
-from subprocess import check_output
+from subprocess import run
 from socket import socket
 from tempfile import gettempdir
 from shutil import rmtree
 
-from setup import DEFAULT_VALUES
+from setup import CONFIG
 
 def generateClientTOML(tmpDir, authIP, startingPortNumber, authorityPublicKey, decoyTraffic="true"):
     with open(path.join(tmpDir, "client.toml"), 'w+') as f:
@@ -38,19 +38,20 @@ s.close()
 
 testnetConfDir = path.join(gettempdir(), "meson-testnet")
 try: rmtree(testnetConfDir)
-finally: mkdir(testnetConfDir)
+except: pass
+mkdir(testnetConfDir)
 
-check_output([
+run([
     "genconfig",
     "-o",
     testnetConfDir,
     "-n",
-    str(DEFAULT_VALUES["TESTNET"]["NODES"]),
+    str(CONFIG["TESTNET"]["NODES"]),
     "-a",
     ip,
     "-p",
-    str(DEFAULT_VALUES["TESTNET"]["PROVIDERS"]),
-])
+    str(CONFIG["TESTNET"]["PROVIDERS"]),
+], check=True)
 
 # open some files to read their contents
 with open(path.join(testnetConfDir, "nonvoting", "identity.public.pem"), 'r') as f:
@@ -80,8 +81,8 @@ services:
     ports:
       - "{3}:{3}"
 """.format(
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["CONTAINER"],
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"],
+    CONFIG["AUTH"]["CONTAINER"],
+    CONFIG["AUTH"]["TAGS"]["NAMED"],
     testnetConfDir,
     startingPortNumber
 )
@@ -93,7 +94,7 @@ currentPrometheusPort = 35000
 currentUserRegistrationPort = int(startingUserRegistrationPort)-1
 
 # append provider configuration
-for idx in range(0, DEFAULT_VALUES["TESTNET"]["PROVIDERS"]):
+for idx in range(0, CONFIG["TESTNET"]["PROVIDERS"]):
     currentPrometheusPort += 1
     currentMixnetPortNumber += 1
     currentUserRegistrationPort += 1
@@ -110,8 +111,8 @@ for idx in range(0, DEFAULT_VALUES["TESTNET"]["PROVIDERS"]):
       - "authority"
 """.format(
     str(idx),
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["CONTAINER"],
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"],
+    CONFIG["MESON"]["CONTAINER"],
+    CONFIG["MESON"]["BRANCH"],
     testnetConfDir,
     str(currentMixnetPortNumber),
     str(currentUserRegistrationPort),
@@ -119,7 +120,7 @@ for idx in range(0, DEFAULT_VALUES["TESTNET"]["PROVIDERS"]):
 )
 
 # append mixnode configuration
-for idx in range(0, DEFAULT_VALUES["TESTNET"]["NODES"]):
+for idx in range(0, CONFIG["TESTNET"]["NODES"]):
     currentPrometheusPort += 1
     currentMixnetPortNumber += 1
     composeYMLFile += """
@@ -134,8 +135,8 @@ for idx in range(0, DEFAULT_VALUES["TESTNET"]["NODES"]):
       - "authority"
 """.format(
     str(idx),
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["CONTAINER"],
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"],
+    CONFIG["MESON"]["CONTAINER"],
+    CONFIG["MESON"]["BRANCH"],
     testnetConfDir,
     str(currentMixnetPortNumber),
     str(currentPrometheusPort),
@@ -145,12 +146,11 @@ for idx in range(0, DEFAULT_VALUES["TESTNET"]["NODES"]):
 with open(path.join(testnetConfDir, "testnet.yml"), 'w+') as f:
     f.write(composeYMLFile)
 
-print("\n", check_output(
+run(
     ["docker",
     "stack",
     "deploy",
     "-c",
     path.join(testnetConfDir, "testnet.yml"),
     "mixnet",],
-    encoding="utf-8")
-)
+    check=True)

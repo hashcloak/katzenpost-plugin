@@ -1,48 +1,48 @@
 #!/usr/bin/env python3
 import urllib.request
-from os import environ
-from subprocess import check_output
+from os import environ, chdir
+from subprocess import check_output, run
 from json import loads
 
-dockerApiUrl="https://hub.docker.com/v2/repositories"
-gitHashLength=7
-warpedBuildFlags='-ldflags "-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true"'
-
-DEFAULT_VALUES = {
-    "KATZEN": {
-        "AUTH": {
-            "CONTAINER": "hashcloak/authority",
-            "REPOSITORY": "https://github.com/katzenpost/authority",
-            "BRANCH": "master",
-            "DOCKERTAG": "master",
-            "GITHASH": "",
-        },
-        "SERVER" : {
-            "CONTAINER": "hashcloak/server",
-            "REPOSITORY": "https://github.com/katzenpost/server",
-            "BRANCH": "master",
-            "DOCKERTAG": "master",
-            "GITHASH": "",
-        },
-    },
-    "HASHCLOAK": {
-        "MESON": {
-            "CONTAINER": "hashcloak/meson",
-            "DOCKERTAG": "master",
-            "BRANCH": "",
-            "GITHASH": "",
-        },
-        "CLIENT":{
-            "TEST": {
-                "COMMIT": "master"
+CONFIG = {
+    "AUTH": {
+        "CONTAINER": "hashcloak/authority",
+        "REPOSITORY": "https://github.com/katzenpost/authority",
+        "BRANCH": "master",
+        "GITHASH": "",
+        "TAGS": {
+            "NAMED": "",
+            "HASH": ""
             }
+    },
+    "SERVER" : {
+        "CONTAINER": "hashcloak/server",
+        "REPOSITORY": "https://github.com/katzenpost/server",
+        "BRANCH": "master",
+        "GITHASH": "",
+        "TAGS": {
+            "NAMED": "",
+            "HASH": ""
         }
+    },
+    "MESON": {
+        "CONTAINER": "hashcloak/meson",
+        "BRANCH": "",
+        "GITHASH": "",
+    },
+    "CLIENT":{
+        "TESTCOMMIT": "master"
     },
     "TESTNET": {
         "NODES": 2,
         "PROVIDERS": 2
-        }
+    },
+    "WARPED": "",
 }
+
+dockerApiUrl="https://hub.docker.com/v2/repositories"
+gitHashLength=7
+warpedBuildFlags='-ldflags "-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true"'
 
 def doesContainerExistsInCloud(name, tag):
     try:
@@ -57,7 +57,7 @@ def getContainerInfo(name, tag):
         return None
 
     url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
-    return loads(urllib.request.urlopen(url).read().decode("utf-8"))
+    return loads(urllib.request.urlopen(url).read().decode())
 
 def compareRemoteContainers(ctrOne, ctrTwo):
     nameOne = ctrOne.split(":")[0]
@@ -72,10 +72,9 @@ def compareRemoteContainers(ctrOne, ctrTwo):
     return getContainerInfo(nameOne, tagOne)['images'][0]['digest'] == \
             getContainerInfo(nameTwo, tagTwo)['images'][0]['digest']
 
-
 def getRemoteGitHash(repositoryURL, branch):
-    arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
-    return check_output(arguments, encoding="utf-8").split('\t')[0][:gitHashLength]
+    args = ["git", "ls-remote", "--heads", repositoryURL, branch]
+    return check_output(args).decode().split('\t')[0][:gitHashLength]
 
 def getLocalGitBranch():
     try:
@@ -86,23 +85,28 @@ def getLocalGitBranch():
 
     except KeyError:
         arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-        gitBranch = check_output(arguments, encoding="utf-8").strip()
+        gitBranch = check_output(arguments).decode().strip()
 
     return gitBranch
-
 
 def getLocalGitHash():
     try:
         if environ['TRAVIS_EVENT_TYPE'] == "pull_request":
-            githash = environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
+            gitHash = environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
         else:
-            githash = environ['TRAVIS_COMMIT'][:gitHashLength]
-
+            gitHash = environ['TRAVIS_COMMIT'][:gitHashLength]
     except KeyError:
         arguments = ["git", "rev-parse", "HEAD"]
-        gitHash = check_output(arguments, encoding="utf-8")[:gitHashLength].strip()
+        gitHash = check_output(arguments).decode()[:gitHashLength].strip()
 
     return gitHash
+
+def checkoutRepo(repoPath, repoUrl, commitOrBranch):
+    run(["git", "clone", repoUrl, repoPath])
+    chdir(repoPath)
+    run(["git", "fetch"], check=True)
+    run(["git", "reset", "--hard"], check=True)
+    run(["git", "checkout", commitOrBranch], check=True)
 
 def expandDictionary(mainDictionary):
     tempList = []
@@ -130,35 +134,30 @@ def setNestedValue(dictionary, value, keys):
         else:
             setNestedValue(dictionary.get(keys[0]), value, keys[1:])
 
+for var in expandDictionary(CONFIG):
+    try:
+        setNestedValue(CONFIG, environ[var], var.split("_"))
+    except KeyError:
+        pass
 
-def updateDefaults():
-    for environmentVar in expandDictionary(DEFAULT_VALUES):
-        try:
-            setNestedValue(
-                DEFAULT_VALUES,
-                environ[environmentVar],
-                environmentVar.split("_"),
+if not CONFIG["MESON"]["GITHASH"]:
+    CONFIG["MESON"]["GITHASH"] = getLocalGitHash()
+
+if not CONFIG["MESON"]["BRANCH"]:
+    CONFIG["MESON"]["BRANCH"] = getLocalGitBranch()
+
+if not CONFIG["WARPED"] and CONFIG["MESON"]["BRANCH"] != "master":
+    CONFIG["WARPED"] = True
+
+for key in ["AUTH", "SERVER"]:
+    if not CONFIG[key]["GITHASH"]:
+        CONFIG[key]["GITHASH"] = getRemoteGitHash(
+                CONFIG[key]["REPOSITORY"],
+                CONFIG[key]["BRANCH"]
             )
-        except KeyError:
-            pass
+    CONFIG[key]["TAGS"]["NAMED"] = CONFIG[key]["BRANCH"]
+    CONFIG[key]["TAGS"]["HASH"] = CONFIG[key]["GITHASH"]
+    if CONFIG["WARPED"]:
+        CONFIG[key]["TAGS"]["NAMED"] = "warped"
+        CONFIG[key]["TAGS"]["HASH"] = "warped_" + CONFIG[key]["GITHASH"]
 
-    repo = DEFAULT_VALUES["KATZEN"]["AUTH"]["REPOSITORY"]
-    branch = DEFAULT_VALUES["KATZEN"]["AUTH"]["BRANCH"]
-    value = DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] 
-    DEFAULT_VALUES["KATZEN"]["AUTH"]["GITHASH"] = value if value else getRemoteGitHash(repo, branch)
-
-    repo = DEFAULT_VALUES["KATZEN"]["SERVER"]["REPOSITORY"]
-    branch = DEFAULT_VALUES["KATZEN"]["SERVER"]["BRANCH"]
-    value = DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"]
-    DEFAULT_VALUES["KATZEN"]["SERVER"]["GITHASH"] = value if value else getRemoteGitHash(repo, branch)
-
-    value = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"]
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["GITHASH"] = value if value else getLocalGitHash()
-    value = DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"]
-    DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] = value if value else getLocalGitBranch()
-
-    if DEFAULT_VALUES["HASHCLOAK"]["MESON"]["BRANCH"] != "master":
-        DEFAULT_VALUES["KATZEN"]["SERVER"]["DOCKERTAG"] = "warped"
-        DEFAULT_VALUES["KATZEN"]["AUTH"]["DOCKERTAG"] = "warped"
-
-updateDefaults()
