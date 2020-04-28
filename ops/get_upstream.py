@@ -3,7 +3,7 @@ import fileinput
 import os
 import subprocess as sp
 
-from setup import *
+from setup import DEFAULT_VALUES, compareRemoteContainers, warpedBuildFlags
 
 def updateDockerFile(dockerFile):
     for line in fileinput.input(dockerFile, inplace=True):

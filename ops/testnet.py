@@ -4,7 +4,7 @@ from socket import socket
 from tempfile import gettempdir
 from shutil import rmtree
 
-from setup import *
+from setup import DEFAULT_VALUES
 
 def generateClientTOML(tmpDir, authIP, startingPortNumber, authorityPublicKey, decoyTraffic="true"):
     with open(path.join(tmpDir, "client.toml"), 'w+') as f:
@@ -88,7 +88,9 @@ services:
 
 currentMixnetPortNumber = int(startingPortNumber)
 currentPrometheusPort = 35000
-currentUserRegistrationPort = int(startingUserRegistrationPort)
+# This one is -1 because it isn't used by the authority but
+# it is used by the providers
+currentUserRegistrationPort = int(startingUserRegistrationPort)-1
 
 # append provider configuration
 for idx in range(0, DEFAULT_VALUES["TESTNET"]["PROVIDERS"]):

@@ -36,6 +36,8 @@ github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/hashcloak/Meson-plugin v0.0.0-20200402113327-5d7214f85bcb/go.mod h1:mnVesFTdtvpOkegwVInSeVW8WL8EWu66qPSauTcNmEw=
+github.com/hashcloak/genconfig v0.0.0-20200402113439-cc108de79e7f h1:2USQR/BK/MldMhxAoq2XpwRfI42X6en+Krq5zPztqX4=
+github.com/hashcloak/genconfig v0.0.0-20200402113439-cc108de79e7f/go.mod h1:bRhhVYga4Bl2HTSiIAh7kErRkQCCFrNGeSNJ6JmEhzc=
 github.com/jackc/fake v0.0.0-20150926172116-812a484cc733/go.mod h1:WrMFNQdiFJ80sQsxDoMokWK1W5TQtxBFNpzWTD84ibQ=
 github.com/jackc/pgx v3.5.0+incompatible/go.mod h1:0ZGrqGqkRlliWnWB4zKnWtjbSWbGkVEFm4TeybAXq+I=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=

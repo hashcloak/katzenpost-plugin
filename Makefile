@@ -9,9 +9,6 @@ clean:
 
 genconfig:
 	go get github.com/hashcloak/genconfig
-	sed -i '/.genconfig*/d' go.mod # we don't want to add genconfig to go modules
-	sed -i '/.genconfig*/d' go.sum # we don't want to add genconfig to go modules
-
 	@touch $(flags)/$@
 
 get_upstream:
