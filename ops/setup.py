@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import os
-import subprocess as sp
 import urllib.request
-import json
-import pprint
+from os import environ
+from subprocess import check_output
+from json import loads
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 gitHashLength=7
@@ -39,6 +38,10 @@ DEFAULT_VALUES = {
             }
         }
     },
+    "TESTNET": {
+        "NODES": 2,
+        "PROVIDERS": 2
+        }
 }
 
 def doesContainerExistsInCloud(name, tag):
@@ -54,7 +57,7 @@ def getContainerInfo(name, tag):
         return None
 
     url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
-    return json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
+    return loads(urllib.request.urlopen(url).read().decode("utf-8"))
 
 def compareRemoteContainers(ctrOne, ctrTwo):
     nameOne = ctrOne.split(":")[0]
@@ -72,32 +75,32 @@ def compareRemoteContainers(ctrOne, ctrTwo):
 
 def getRemoteGitHash(repositoryURL, branch):
     arguments = ["git", "ls-remote", "--heads", repositoryURL, branch]
-    return sp.check_output(arguments, encoding="utf-8").split('\t')[0][:gitHashLength]
+    return check_output(arguments, encoding="utf-8").split('\t')[0][:gitHashLength]
 
 def getLocalGitBranch():
     try:
-        if os.environ['TRAVIS_EVENT_TYPE'] == "pull_request":
-            gitBranch = os.environ['TRAVIS_PULL_REQUEST_BRANCH']
+        if environ['TRAVIS_EVENT_TYPE'] == "pull_request":
+            gitBranch = environ['TRAVIS_PULL_REQUEST_BRANCH']
         else:
-            gitBranch = os.environ['TRAVIS_BRANCH']
+            gitBranch = environ['TRAVIS_BRANCH']
 
     except KeyError:
         arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-        gitBranch = sp.check_output(arguments, encoding="utf-8").strip()
+        gitBranch = check_output(arguments, encoding="utf-8").strip()
 
     return gitBranch
 
 
 def getLocalGitHash():
     try:
-        if os.environ['TRAVIS_EVENT_TYPE'] == "pull_request":
-            githash = os.environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
+        if environ['TRAVIS_EVENT_TYPE'] == "pull_request":
+            githash = environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
         else:
-            githash = os.environ['TRAVIS_COMMIT'][:gitHashLength]
+            githash = environ['TRAVIS_COMMIT'][:gitHashLength]
 
     except KeyError:
         arguments = ["git", "rev-parse", "HEAD"]
-        gitHash = sp.check_output(arguments, encoding="utf-8")[:gitHashLength].strip()
+        gitHash = check_output(arguments, encoding="utf-8")[:gitHashLength].strip()
 
     return gitHash
 
@@ -133,7 +136,7 @@ def updateDefaults():
         try:
             setNestedValue(
                 DEFAULT_VALUES,
-                os.environ[environmentVar],
+                environ[environmentVar],
                 environmentVar.split("_"),
             )
         except KeyError:
