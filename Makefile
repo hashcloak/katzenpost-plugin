@@ -11,12 +11,8 @@ genconfig:
 	go get github.com/hashcloak/genconfig
 	@touch $(flags)/$@
 
-get_upstream:
-	python3 ops/get_upstream.py
-	@touch $(flags)/$@
-
-build_meson: get_upstream
-	python3 ops/build_meson.py
+build_meson:
+	python3 ops/build_containers.py
 	@touch $(flags)/$@
 
 testnet: build_meson genconfig

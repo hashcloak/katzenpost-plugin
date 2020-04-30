@@ -4,7 +4,7 @@ from socket import socket
 from tempfile import gettempdir
 from shutil import rmtree
 
-from setup import CONFIG
+from config import CONFIG
 
 def generateClientTOML(tmpDir, authIP, startingPortNumber, authorityPublicKey, decoyTraffic="true"):
     with open(path.join(tmpDir, "client.toml"), 'w+') as f:
@@ -31,7 +31,7 @@ def generateClientTOML(tmpDir, authIP, startingPortNumber, authorityPublicKey, d
 
 # get ip address
 s = socket()
-s.connect(("hashcloak.com", 80))
+s.connect(("1.1.1.1", 80))
 ip = s.getsockname()[0]
 print("Accesible IP address: ", ip)
 s.close()
@@ -112,7 +112,7 @@ for idx in range(0, CONFIG["TESTNET"]["PROVIDERS"]):
 """.format(
     str(idx),
     CONFIG["MESON"]["CONTAINER"],
-    CONFIG["MESON"]["BRANCH"],
+    CONFIG["MESON"]["TAGS"]["NAMED"],
     testnetConfDir,
     str(currentMixnetPortNumber),
     str(currentUserRegistrationPort),
@@ -136,7 +136,7 @@ for idx in range(0, CONFIG["TESTNET"]["NODES"]):
 """.format(
     str(idx),
     CONFIG["MESON"]["CONTAINER"],
-    CONFIG["MESON"]["BRANCH"],
+    CONFIG["MESON"]["TAGS"]["NAMED"],
     testnetConfDir,
     str(currentMixnetPortNumber),
     str(currentPrometheusPort),
@@ -146,11 +146,10 @@ for idx in range(0, CONFIG["TESTNET"]["NODES"]):
 with open(path.join(testnetConfDir, "testnet.yml"), 'w+') as f:
     f.write(composeYMLFile)
 
-run(
-    ["docker",
+run(["docker",
     "stack",
     "deploy",
     "-c",
     path.join(testnetConfDir, "testnet.yml"),
-    "mixnet",],
-    check=True)
+    "mixnet",
+    ], check=True)
