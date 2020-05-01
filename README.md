@@ -21,6 +21,8 @@ To add support for a new chain, the following needs to be done:
 
 ## Usage
 
+__⚠️ Meson is still in alpha and for this reason we are using a centralized non voting authority. This is also the reason why we need manual exchange of the public keys of the nodes that get added to the network.__
+
 ### Dependencies:
 
 - `git`
@@ -38,21 +40,17 @@ make tesnet
 You can then use the [Wallet demo](https://github.com/hashcloak/Meson-wallet-demo) with this tesnet that just got spawned or take a look at [Sending transactions](#how-to-send-transactions). You can see the containers that are running with: `docker service ls`
 
 
-## Usage
-
-__⚠️ Meson is still in alpha and for this reason we are using a centralized non voting authority. This is also the reason why we need manual exchange of the public keys of the nodes that get added to the network.__
-
-#### How to Run a Provider or Mix Node
+### How to Run a Provider or Mix Node
 
 A provider node is essentially the same as a mix node just that it has more capabilities. Specifically it can provide services or capabilities in the form of [plugins](https://github.com/katzenpost/docs/blob/master/handbook/mix_server.rst#external-kaetzchen-plugin-configuration). It also acts as the edge nodes of a mixnet in which traffic either enters or leaves.
 
-All of our infrastructure uses docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/#genconfig) script:
+All of our infrastructure uses docker setups (but docker is not neccesary if you want to use Meson without docker). You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/#genconfig) script:
 
 ```bash
 go get github.com/hashcloak/genconfig
 genconfig \
   -a 138.197.57.19 \ # Current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -authID <needs update> \ # Current public key of authority
   -name provider-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address, needs to be reachable from the authority
   -provider # Flag to indicate you only want a provider config
@@ -73,7 +71,7 @@ __Note:__ You will have to wait for about 20 minutes before your node is being u
 
 To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/docs/#running-meson).
 
-#### How to send transactions
+### How to send transactions
 
 __⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently support for both `Goerli` and `Rinkeby` testnets.
 
