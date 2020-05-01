@@ -4,11 +4,7 @@ from tempfile import gettempdir, NamedTemporaryFile
 import urllib.request
 from json import loads
 
-from config import (
-    CONFIG,
-    checkoutRepo,
-    warpedBuildFlags,
-)
+from config import CONFIG, checkoutRepo, warpedBuildFlags
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 
@@ -88,10 +84,10 @@ def prepareDockerBuildContext(name, gitHash):
     return tmpdf, repoPath
 
 for key in ["AUTH", "SERVER", "MESON"]:
-    container = CONFIG[key]["CONTAINER"],
-    namedTag = CONFIG[key]["TAGS"]["NAMED"],
-    hashTag = CONFIG[key]["TAGS"]["HASH"],
-    gitHash = CONFIG[key]["GITHASH"],
+    container = CONFIG[key]["CONTAINER"]
+    namedTag = CONFIG[key]["TAGS"]["NAMED"]
+    hashTag = CONFIG[key]["TAGS"]["HASH"]
+    gitHash = CONFIG[key]["GITHASH"]
     if compareRemoteContainers(container+":"+namedTag, container+":"+hashTag):
         run([
             "docker",

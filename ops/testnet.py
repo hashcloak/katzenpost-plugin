@@ -46,11 +46,11 @@ run([
     "-o",
     testnetConfDir,
     "-n",
-    str(CONFIG["TESTNET"]["NODES"]),
+    str(CONFIG["TEST"]["NODES"]),
     "-a",
     ip,
     "-p",
-    str(CONFIG["TESTNET"]["PROVIDERS"]),
+    str(CONFIG["TEST"]["PROVIDERS"]),
 ], check=True)
 
 # open some files to read their contents
@@ -94,7 +94,7 @@ currentPrometheusPort = 35000
 currentUserRegistrationPort = int(startingUserRegistrationPort)-1
 
 # append provider configuration
-for idx in range(0, CONFIG["TESTNET"]["PROVIDERS"]):
+for idx in range(0, CONFIG["TEST"]["PROVIDERS"]):
     currentPrometheusPort += 1
     currentMixnetPortNumber += 1
     currentUserRegistrationPort += 1
@@ -120,7 +120,7 @@ for idx in range(0, CONFIG["TESTNET"]["PROVIDERS"]):
 )
 
 # append mixnode configuration
-for idx in range(0, CONFIG["TESTNET"]["NODES"]):
+for idx in range(0, CONFIG["TEST"]["NODES"]):
     currentPrometheusPort += 1
     currentMixnetPortNumber += 1
     composeYMLFile += """

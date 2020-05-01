@@ -32,7 +32,11 @@ CONFIG = {
             "HASH": ""
         }
     },
-    "TESTNET": {
+    "TEST": {
+        "PKS": {
+            "ETHEREUM": "",
+            "BINANCE": ""
+        },
         "CLIENTCOMMIT": "master",
         "NODES": 2,
         "PROVIDERS": 2
