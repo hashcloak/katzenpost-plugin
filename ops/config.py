@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from os import environ
 from subprocess import run, check_output
 
@@ -57,7 +56,6 @@ def getLocalGitBranch():
             gitBranch = environ['TRAVIS_PULL_REQUEST_BRANCH']
         else:
             gitBranch = environ['TRAVIS_BRANCH']
-
     except KeyError:
         arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         gitBranch = check_output(arguments).decode().strip()
