@@ -50,29 +50,21 @@ def getRemoteGitHash(repositoryURL, branch):
     args = ["git", "ls-remote", "--heads", repositoryURL, branch]
     return check_output(args).decode().split('\t')[0][:gitHashLength]
 
-def getLocalGitBranch():
+def getLocalRepoInfo():
     try:
         if environ['TRAVIS_EVENT_TYPE'] == "pull_request":
             gitBranch = environ['TRAVIS_PULL_REQUEST_BRANCH']
+            gitHash = environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
         else:
             gitBranch = environ['TRAVIS_BRANCH']
+            gitHash = environ['TRAVIS_COMMIT'][:gitHashLength]
     except KeyError:
         arguments = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
         gitBranch = check_output(arguments).decode().strip()
-
-    return gitBranch
-
-def getLocalGitHash():
-    try:
-        if environ['TRAVIS_EVENT_TYPE'] == "pull_request":
-            gitHash = environ['TRAVIS_PULL_REQUEST_SHA'][:gitHashLength]
-        else:
-            gitHash = environ['TRAVIS_COMMIT'][:gitHashLength]
-    except KeyError:
         arguments = ["git", "rev-parse", "HEAD"]
         gitHash = check_output(arguments).decode()[:gitHashLength].strip()
 
-    return gitHash
+    return gitBranch, gitHash
 
 def checkoutRepo(repoPath, repoUrl, commitOrBranch):
     run(["git", "clone", repoUrl, repoPath])
@@ -105,19 +97,26 @@ for var in expandDictionary(CONFIG):
     except KeyError:
         pass
 
-if not CONFIG["MESON"]["BRANCH"]:
-    CONFIG["MESON"]["BRANCH"] = getLocalGitBranch()
 
-if CONFIG["WARPED"] == "false" or CONFIG["MESON"]["BRANCH"] == "master":
-    CONFIG["WARPED"] = ""
+localBranch, localHash = getLocalRepoInfo()
+if CONFIG["MESON"]["BRANCH"] == "":
+    CONFIG["MESON"]["BRANCH"] = localBranch
 
 for key in ["AUTH", "SERVER", "MESON"]:
-    if not CONFIG[key]["GITHASH"]:
-        CONFIG[key]["GITHASH"] = getLocalGitHash() if key == "MESON" else getRemoteGitHash(CONFIG[key]["REPOSITORY"], CONFIG[key]["BRANCH"])
+    if CONFIG[key]["GITHASH"] == "":
+        if key == "MESON":
+            CONFIG[key]["GITHASH"] = localHash
+        else:
+            CONFIG[key]["GITHASH"] = getRemoteGitHash(CONFIG[key]["REPOSITORY"], CONFIG[key]["BRANCH"])
 
     CONFIG[key]["TAGS"]["NAMED"] = CONFIG[key]["BRANCH"]
     CONFIG[key]["TAGS"]["HASH"] = CONFIG[key]["GITHASH"]
 
-    if CONFIG["WARPED"]:
+
+if CONFIG["WARPED"] == "false" or CONFIG["MESON"]["BRANCH"] == "master":
+    CONFIG["WARPED"] = ""
+
+if CONFIG["WARPED"]:
+    for key in ["AUTH", "SERVER", "MESON"]:
         CONFIG[key]["TAGS"]["NAMED"] = "warped_" + CONFIG[key]["BRANCH"]
         CONFIG[key]["TAGS"]["HASH"] = "warped_" + CONFIG[key]["GITHASH"]
