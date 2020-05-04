@@ -35,6 +35,9 @@ s.connect(("1.1.1.1", 80))
 ip = s.getsockname()[0]
 print("Accesible IP address: ", ip)
 s.close()
+output = run(["docker", "info"], capture_output=True, check=True)
+if "Swarm: inactive" in output.stdout.decode():
+    run(["docker", "swarm", "init", "--advertise-addr={}".format(ip)], check=True)
 
 testnetConfDir = path.join(gettempdir(), "meson-testnet")
 try: rmtree(testnetConfDir)
