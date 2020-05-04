@@ -89,8 +89,6 @@ services:
 
 currentMixnetPortNumber = int(startingPortNumber)
 currentPrometheusPort = 35000
-# This one is -1 because it isn't used by the authority but
-# it is used by the providers
 currentUserRegistrationPort = int(startingUserRegistrationPort)-1
 
 # append provider configuration
