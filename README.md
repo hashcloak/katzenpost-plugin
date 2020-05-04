@@ -67,9 +67,9 @@ docker service create \
   hashcloak/meson:master
 ```
 
-__Note:__ You will have to wait for about 20 minutes before your node is being used in the mixnet. It has to wait for a [new epoch](https://hashcloak.com/Meson/docs/#waiting-for-epoch).
+__Note:__ You will have to wait for about 20 minutes before your node is being used in the mixnet. It has to wait for a [new epoch](https://hashcloak.com/Meson/docs/#waiting-for-katzenpost-epoch).
 
-To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/docs/#running-meson).
+To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/docs/#how-to-run-a-mix-node).
 
 ### How to send transactions
 
