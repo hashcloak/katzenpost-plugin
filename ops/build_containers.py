@@ -18,22 +18,18 @@ def doesContainerExistsInCloud(name, tag):
 
 def getContainerInfo(name, tag):
     if not doesContainerExistsInCloud(name, tag):
-        return None
+        return {}
 
     url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
     return loads(urllib.request.urlopen(url).read().decode())
 
-def compareRemoteContainers(ctrOne, ctrTwo):
-    name1 = ctrOne.split(":")[0]
-    tag1 = ctrOne.split(":")[1]
-    name2 = ctrTwo.split(":")[0]
-    tag2 = ctrTwo.split(":")[1]
-    if not doesContainerExistsInCloud(name1, tag1) or \
-            not doesContainerExistsInCloud(name2, tag2):
+def compareRemoteContainers(ctr1, ctr2):
+    info1 = getContainerInfo(ctr1.split(":")[0], ctr1.split(":")[1])
+    info2 = getContainerInfo(ctr2.split(":")[0], ctr2.split(":")[1])
+    if not info1 or not info2:
         return False
 
-    return getContainerInfo(name1, tag1)['images'][0]['digest'] == \
-            getContainerInfo(name2, tag2)['images'][0]['digest']
+    return info1['images'][0]['digest'] == info2['images'][0]['digest']
 
 def buildContainer(container, tag, dockerFile, path):
     print("\nLOG: Building {}:{}\n".format(container, tag))
