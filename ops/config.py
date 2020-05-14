@@ -1,35 +1,25 @@
-from os import environ
+from os import environ, getenv
 from subprocess import run, check_output
 
 CONFIG = {
-    "AUTH": {
-        "CONTAINER": "hashcloak/authority",
-        "REPOSITORY": "https://github.com/katzenpost/authority",
-        "BRANCH": "master",
-        "GITHASH": "",
-        "TAGS": {
-            "NAMED": "",
-            "HASH": ""
-            }
-    },
-    "SERVER" : {
-        "CONTAINER": "hashcloak/server",
-        "REPOSITORY": "https://github.com/katzenpost/server",
-        "BRANCH": "master",
-        "GITHASH": "",
-        "TAGS": {
-            "NAMED": "",
-            "HASH": ""
-        }
-    },
-    "MESON": {
-        "CONTAINER": "hashcloak/meson",
-        "BRANCH": "",
-        "GITHASH": "",
-        "TAGS": {
-            "NAMED": "",
-            "HASH": ""
-        }
+    "REPOS": {
+        "AUTH": {
+            "CONTAINER": "hashcloak/authority",
+            "REPOSITORY": "https://github.com/katzenpost/authority",
+            "BRANCH": "master",
+            "GITHASH": "",
+        },
+        "SERVER" : {
+            "CONTAINER": "hashcloak/server",
+            "REPOSITORY": "https://github.com/katzenpost/server",
+            "BRANCH": "master",
+            "GITHASH": "",
+        },
+        "MESON": {
+            "CONTAINER": "hashcloak/meson",
+            "BRANCH": "",
+            "GITHASH": "",
+        },
     },
     "TEST": {
         "PKS": {
@@ -40,7 +30,7 @@ CONFIG = {
         "NODES": 2,
         "PROVIDERS": 2
     },
-    "WARPED": "true",
+    "WARPED": "true"
 }
 
 gitHashLength=7
@@ -91,32 +81,28 @@ def setNestedValue(dictionary, value, keys):
         else:
             setNestedValue(dictionary.get(keys[0]), value, keys[1:])
 
+def getNestedValue(dictionary, *args):
+    if args and dictionary:
+        subkey = args[0]
+        if subkey:
+            value = dictionary.get(subkey)
+            return value if len(args) == 1 else getNestedValue(value, *args[1:])
+
 for var in expandDictionary(CONFIG):
-    try:
-        setNestedValue(CONFIG, environ[var], var.split("_"))
-    except KeyError:
-        pass
-
-
-localBranch, localHash = getLocalRepoInfo()
-if CONFIG["MESON"]["BRANCH"] == "":
-    CONFIG["MESON"]["BRANCH"] = localBranch
-
-for key in ["AUTH", "SERVER", "MESON"]:
-    if CONFIG[key]["GITHASH"] == "":
-        if key == "MESON":
-            CONFIG[key]["GITHASH"] = localHash
-        else:
-            CONFIG[key]["GITHASH"] = getRemoteGitHash(CONFIG[key]["REPOSITORY"], CONFIG[key]["BRANCH"])
-
-    CONFIG[key]["TAGS"]["NAMED"] = CONFIG[key]["BRANCH"]
-    CONFIG[key]["TAGS"]["HASH"] = CONFIG[key]["GITHASH"]
-
+    value = getenv(var, getNestedValue(CONFIG, *var.split("_")))
+    setNestedValue(CONFIG, value, var.split("_"))
 
 if CONFIG["WARPED"] == "false" or CONFIG["MESON"]["BRANCH"] == "master":
     CONFIG["WARPED"] = ""
 
-if CONFIG["WARPED"]:
-    for key in ["AUTH", "SERVER", "MESON"]:
-        CONFIG[key]["TAGS"]["NAMED"] = "warped_" + CONFIG[key]["BRANCH"]
-        CONFIG[key]["TAGS"]["HASH"] = "warped_" + CONFIG[key]["GITHASH"]
+localBranch, localHash = getLocalRepoInfo()
+if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
+    CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
+
+for key, innerDict in CONFIG["REPOS"].items():
+    if innerDict["GITHASH"] == "":
+        if key == "MESON":
+            innerDict["GITHASH"] = localHash
+        else:
+            innerDict["GITHASH"] = getRemoteGitHash(innerDict["REPOSITORY"], innerDict["BRANCH"])
+

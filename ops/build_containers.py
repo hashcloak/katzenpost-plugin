@@ -1,10 +1,10 @@
 from os import path, curdir
 from subprocess import run
-from tempfile import gettempdir, NamedTemporaryFile
+from tempfile import gettempdir
 import urllib.request
 from json import loads
 
-from config import CONFIG, checkoutRepo, warpedBuildFlags
+from config import CONFIG, checkoutRepo
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 
@@ -23,9 +23,9 @@ def getContainerInfo(name, tag):
     url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
     return loads(urllib.request.urlopen(url).read().decode())
 
-def compareRemoteContainers(ctr1, ctr2):
-    info1 = getContainerInfo(ctr1.split(":")[0], ctr1.split(":")[1])
-    info2 = getContainerInfo(ctr2.split(":")[0], ctr2.split(":")[1])
+def compareRemoteContainers(containerOne, containerTwo):
+    info1 = getContainerInfo(containerOne.split(":")[0], containerOne.split(":")[1])
+    info2 = getContainerInfo(containerTwo.split(":")[0], containerTwo.split(":")[1])
     if not info1 or not info2:
         return False
 
@@ -33,15 +33,23 @@ def compareRemoteContainers(ctr1, ctr2):
 
 def buildContainer(container, tag, dockerFile, path):
     print("\nLOG: Building {}:{}\n".format(container, tag))
-    run([
+    args = [
         "docker",
         "build",
         "-t",
         "{}:{}".format(container, tag),
         "-f",
         dockerFile,
-        path
-    ], check=True)
+        path,
+    ]
+
+    if CONFIG["WARPED"]:
+        args.extend(["--build-arg", "warped=true", "--build-arg", "server=warped"])
+
+    for a in args: print(a, end=' ')
+    print(end='\n\n')
+
+    run(args, check=True)
 
 def reTag(container, tag1, tag2):
     print("\nLOG: Tagging {} {} -> {}\n".format(container, tag1, tag2))
@@ -52,38 +60,11 @@ def reTag(container, tag1, tag2):
         "{}:{}".format(container, tag2)
     ], check=True)
 
-def prepareDockerBuildContext(name, gitHash):
-    repoPath = path.join(gettempdir(), name)
-    if name == "authority":
-        dockerFile = path.join(repoPath, "Dockerfile.nonvoting")
-        checkoutRepo(repoPath, CONFIG["AUTH"]["REPOSITORY"], gitHash)
-    elif name == "server":
-        dockerFile = path.join(repoPath, "Dockerfile")
-        checkoutRepo(repoPath, CONFIG["SERVER"]["REPOSITORY"], gitHash)
-    elif name == "meson":
-        repoPath = curdir
-        dockerFile = "Dockerfile"
+for repo in CONFIG["REPOS"].values():
+    container = repo["CONTAINER"]
+    namedTag = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
+    hashTag = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]
 
-    tmpdf = NamedTemporaryFile().name
-    with open(dockerFile, 'r') as infile, open(tmpdf, 'w+') as output:
-        for line in infile:
-            if "RUN cd cmd/" in line and "go build" in line and CONFIG["WARPED"]:
-                line = line.strip() + " " + warpedBuildFlags + "\n"
-            if CONFIG["SERVER"]["CONTAINER"] in line and CONFIG["WARPED"]:
-                line = "FROM {}:{}\n".format(
-                        CONFIG["SERVER"]["CONTAINER"],
-                        CONFIG["SERVER"]["TAGS"]["NAMED"],
-                    )
-
-            output.write(line)
-
-    return tmpdf, repoPath
-
-for key in ["AUTH", "SERVER", "MESON"]:
-    container = CONFIG[key]["CONTAINER"]
-    namedTag = CONFIG[key]["TAGS"]["NAMED"]
-    hashTag = CONFIG[key]["TAGS"]["HASH"]
-    gitHash = CONFIG[key]["GITHASH"]
     if compareRemoteContainers(container+":"+namedTag, container+":"+hashTag):
         run([
             "docker",
@@ -91,6 +72,14 @@ for key in ["AUTH", "SERVER", "MESON"]:
             "{}:{}".format(container, namedTag)
         ], check=True)
     else:
-        dockerFile, repoPath = prepareDockerBuildContext(container.split("/")[-1], gitHash)
-        buildContainer(container, hashTag, dockerFile, repoPath)
+        name = repo["CONTAINER"].split("/")[-1]
+        repoPath = path.join(gettempdir(), name)
+        if name == "meson":
+            repoPath = curdir
+        else:
+            checkoutRepo(repoPath, repo["REPOSITORY"], repo["GITHASH"])
+
+        dockerFile = "Dockerfile" if name != "authority" else "Dockerfile.nonvoting"
+
+        buildContainer(container, hashTag, path.join(repoPath, dockerFile), repoPath)
         reTag(container, hashTag, namedTag)
