@@ -8,7 +8,7 @@ clean:
 	rm -rf $(flags)
 
 genconfig:
-	go get github.com/hashcloak/genconfig
+	go get -u github.com/hashcloak/genconfig
 	@touch $(flags)/$@
 
 build_meson:
@@ -18,7 +18,7 @@ build_meson:
 testnet: build_meson genconfig
 	python3 ops/testnet.py
 	@touch $(flags)/$@
-	sleep 40
+	sleep 20
 
 integration_test: testnet
 	python3 ops/integration_test.py

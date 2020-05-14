@@ -1,12 +1,6 @@
 from subprocess import run
 from config import CONFIG
 
-for key in ["AUTH", "SERVER", "MESON"]:
-    run(["docker", "push", "{}:{}".format(
-        CONFIG[key]["CONTAINER"],
-        CONFIG[key]["TAGS"]["NAMED"]
-    )])
-    run(["docker", "push", "{}:{}".format(
-        CONFIG[key]["CONTAINER"],
-        CONFIG[key]["TAGS"]["HASH"]
-    )])
+for repo in CONFIG["REPOS"].values():
+    run(["docker", "push", "{}:{}".format(repo["CONTAINER"], repo["NAMEDTAG"])])
+    run(["docker", "push", "{}:{}".format(repo["CONTAINER"], repo["HASHTAG"])])

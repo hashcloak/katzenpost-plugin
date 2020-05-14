@@ -3,8 +3,7 @@ language: go
 go:
   - "1.13"
 
-before_install:
-  - docker swarm init
+sudo: true
 
 script:
   - if [ -n "$(gofmt -l .)" ]; then echo "Go code is not formatted:"; gofmt -d .; exit 1; fi
