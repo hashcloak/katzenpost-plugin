@@ -24,27 +24,26 @@ def genDockerService(
     volumes: List[str] = [],
     dependsOn: List[str] = [],
 ) -> str:
-
     s = '  '
-    baseString = "{s}{name}:\n{s}{s}image: {image}\n".format(
+    service = "{s}{name}:\n{s}{s}image: {image}\n".format(
         s=s,
         name=name,
         image=image,
     )
 
     if ports:
-        baseString += "{s}ports:\n".format(s=s*2)
-        for i in ports:
-            baseString += '{s}- "{port}"\n'.format(s=s*3, port=i)
+        service += "{s}ports:\n".format(s=s*2)
+        for port in ports:
+            service += '{s}- "{port}"\n'.format(s=s*3, port=port)
 
     if volumes:
-        baseString += "{s}volumes:\n".format(s=s*2)
-        for i in volumes:
-            baseString += '{s}- {vol}\n'.format(s=s*3, vol=i)
+        service += "{s}volumes:\n".format(s=s*2)
+        for vol in volumes:
+            service += '{s}- {vol}\n'.format(s=s*3, vol=vol)
 
     if dependsOn:
-        baseString += "{s}depends_on:\n".format(s=s*2)
-        for i in dependsOn:
-            baseString += '{s}- "{dep}"\n'.format(s=s*3, dep=i)
+        service += "{s}depends_on:\n".format(s=s*2)
+        for item in dependsOn:
+            service += '{s}- "{dep}"\n'.format(s=s*3, dep=item)
 
-    return baseString
+    return service

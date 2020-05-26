@@ -24,7 +24,7 @@ clientTomlTemplate = """
   PollingInterval = 1
 
 [NonvotingAuthority]
-    Address = "{}:{}
+    Address = "{}:{}"
     PublicKey = "{}"
 """
 
@@ -105,10 +105,10 @@ def main():
         ))
 
     authorityYAML = genDockerService(
-        "authority",
-        REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
-        ["30000:30000"],
-        ["/tmp/meson-testnet/nonvoting:/conf"],
+        name="authority",
+        image=REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
+        ports=["30000:30000"],
+        volumes=["/tmp/meson-testnet/nonvoting:/conf"],
     )
 
     currentMixnetPortNumber = int(startingPortNumber)
@@ -122,39 +122,42 @@ def main():
         currentPrometheusPort += 1
         currentMixnetPortNumber += 1
         currentUserRegistrationPort += 1
-        ports = [
-            "{0}:{0}".format(currentMixnetPortNumber),
-            "{0}:{0}".format(currentUserRegistrationPort),
-            "{}:{}".format(currentPrometheusPort, "6543")
-        ]
         providersYAML += genDockerService(
-            "provider{}".format(idx),
-            REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
-            ports,
-            [path.join(testnetConfDir, "provider-"+str(idx))+":"+"/conf"],
-            ["authority"]
+            name="provider{}".format(idx),
+            image=REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
+            ports = [
+                "{0}:{0}".format(currentMixnetPortNumber),
+                "{0}:{0}".format(currentUserRegistrationPort),
+                "{}:{}".format(currentPrometheusPort, "6543")
+            ],
+            volumess=[
+                path.join(testnetConfDir, "provider-"+str(idx))+":"+"/conf"
+            ],
+            dependsOn=["authority"]
         )
 
     mixnodesYAML = ""
     for idx in range(0, CONFIG["TEST"]["NODES"]):
         currentPrometheusPort += 1
         currentMixnetPortNumber += 1
-        ports = [
-            "{0}:{0}".format(currentMixnetPortNumber),
-            "{}:{}".format(currentPrometheusPort, "6543")
-        ]
         mixnodesYAML += genDockerService(
-            "node{}".format(idx),
-            REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
-            ports,
-            [path.join(testnetConfDir, "node-"+str(idx))+":"+"/conf"],
-            ["authority"]
+            image=REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
+            ports=[
+                "{0}:{0}".format(currentMixnetPortNumber),
+                "{}:{}".format(currentPrometheusPort, "6543")
+            ],
+            volumes=[
+                path.join(testnetConfDir, "node-"+str(idx))+":"+"/conf"
+            ],
+            dependsOn=["authority"],
+            name="node{}".format(idx),
         )
 
     # save compose file
     composePath = path.join(testnetConfDir, "testnet.yml")
+    header = 'version: "3.7"\nservices:\n'
     with open(composePath, 'w+') as f:
-        f.write('version: "3.7"\nservices:\n' + authorityYAML + providersYAML + mixnodesYAML)
+        f.write("".join([header, authorityYAML, providersYAML, mixnodesYAML]))
 
     runDocker(ip, composePath)
 
