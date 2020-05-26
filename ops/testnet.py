@@ -130,7 +130,7 @@ def main():
                 "{0}:{0}".format(currentUserRegistrationPort),
                 "{}:{}".format(currentPrometheusPort, "6543")
             ],
-            volumess=[
+            volumes=[
                 path.join(testnetConfDir, "provider-"+str(idx))+":"+"/conf"
             ],
             dependsOn=["authority"]
