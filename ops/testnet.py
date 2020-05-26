@@ -6,114 +6,27 @@ from tempfile import gettempdir
 from shutil import rmtree
 
 from config import CONFIG
+from utils import genDockerService
 REPOS = CONFIG["REPOS"]
 
-def generateClientTOML(
-    tmpDir: str,
-    authIP: str,
-    startingPortNumber: str,
-    authorityPublicKey:str,
-    decoyTraffic="true"
-) -> None:
-    """Generates the client toml file used by the clients to connect
-    to the mixnet"""
-    with open(path.join(tmpDir, "client.toml"), 'w+') as f:
-        f.write(
-            """
-            [Logging]
-              Disable = false
-              Level = "DEBUG"
-              File = ""
+clientTomlTemplate = """
+[Logging]
+  Disable = false
+  Level = "DEBUG"
+  File = ""
 
-            [UpstreamProxy]
-              Type = "none"
+[UpstreamProxy]
+  Type = "none"
 
-            [Debug]
-              DisableDecoyTraffic = {}
-              CaseSensitiveUserIdentifiers = false
-              PollingInterval = 1
+[Debug]
+  DisableDecoyTraffic = {}
+  CaseSensitiveUserIdentifiers = false
+  PollingInterval = 1
 
-            [NonvotingAuthority]
-                Address = "{}:{}"
-                PublicKey = "{}"
-            """.format(decoyTraffic, authIP, startingPortNumber, authorityPublicKey)
-        )
-
-def genAuthorityYaml(
-    container: str,
-    confDir: str,
-    mixnetPort: str,
-    number=""
-) -> str:
-    """Generates the compose file syntax for the authority container"""
-    return """
-  authority{number}:
-    image: {container}
-    volumes:
-      - {confDir}/nonvoting:/conf
-    ports:
-      - "{mixnetPort}:{mixnetPort}"
-""".format(
-        number=number,
-        container=container,
-        confDir=confDir,
-        mixnetPort=mixnetPort
-    )
-
-def genProviderYaml(
-    number: str,
-    container: str,
-    confDir: str,
-    mixnetPort: str,
-    registrationPort: str,
-    prometheusPort: str
-) -> str:
-    """Generates the compose file syntax provider container"""
-    return """
-  provider{number}:
-    image: {container}
-    volumes:
-      - {confDir}/provider-{number}:/conf
-    ports:
-      - "{mixnetPort}:{mixnetPort}"
-      - "{registrationPort}:{registrationPort}"
-      - "{prometheusPort}:6543"
-    depends_on:
-      - "authority"
-""".format(
-        number=number,
-        container=container,
-        confDir=confDir,
-        mixnetPort=mixnetPort,
-        registrationPort=registrationPort,
-        prometheusPort=prometheusPort,
-    )
-
-def genMixNodeYaml(
-    number: str,
-    container: str,
-    confDir: str,
-    mixnetPort: str,
-    prometheusPort: str
-) -> str:
-    """Generates the compose file syntax mix node container"""
-    return """
-  node{number}:
-    image: {container}
-    volumes:
-      - {confDir}/node-{number}:/conf
-    ports:
-      - "{mixnetPort}:{mixnetPort}"
-      - "{prometheusPort}:6543"
-    depends_on:
-      - "authority"
-""".format(
-        number=number,
-        container=container,
-        confDir=confDir,
-        mixnetPort=mixnetPort,
-        prometheusPort=prometheusPort,
-    )
+[NonvotingAuthority]
+    Address = "{}:{}
+    PublicKey = "{}"
+"""
 
 def generateTestnetConf(ip: str, confDir: str) -> None:
     """Runs the genconfig tool at a specified directory"""
@@ -181,13 +94,22 @@ def main():
     ip = getIpAddress()
     generateTestnetConf(ip, testnetConfDir)
     authorityPublicKey, startingPortNumber, startingUserRegistrationPort = getConfigValues(testnetConfDir)
-    generateClientTOML(testnetConfDir, ip, startingPortNumber, authorityPublicKey)
 
-    authorityYAML = genAuthorityYaml(
-            REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
-            testnetConfDir,
-            startingPortNumber
-        )
+    # Save client.toml
+    with open(path.join(testnetConfDir, "client.toml"), 'w+') as f:
+        f.write(clientTomlTemplate.format(
+            "true",
+            ip,
+            startingPortNumber,
+            authorityPublicKey
+        ))
+
+    authorityYAML = genDockerService(
+        "authority",
+        REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
+        ["30000:30000"],
+        ["/tmp/meson-testnet/nonvoting:/conf"],
+    )
 
     currentMixnetPortNumber = int(startingPortNumber)
     currentUserRegistrationPort = int(startingUserRegistrationPort)-1
@@ -200,26 +122,34 @@ def main():
         currentPrometheusPort += 1
         currentMixnetPortNumber += 1
         currentUserRegistrationPort += 1
-        providersYAML += genProviderYaml(
-                str(idx),
-                REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
-                testnetConfDir,
-                str(currentMixnetPortNumber),
-                str(currentUserRegistrationPort),
-                str(currentPrometheusPort)
-            )
+        ports = [
+            "{0}:{0}".format(currentMixnetPortNumber),
+            "{0}:{0}".format(currentUserRegistrationPort),
+            "{}:{}".format(currentPrometheusPort, "6543")
+        ]
+        providersYAML += genDockerService(
+            "provider{}".format(idx),
+            REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
+            ports,
+            [path.join(testnetConfDir, "provider-"+str(idx))+":"+"/conf"],
+            ["authority"]
+        )
 
     mixnodesYAML = ""
     for idx in range(0, CONFIG["TEST"]["NODES"]):
         currentPrometheusPort += 1
         currentMixnetPortNumber += 1
-        mixnodesYAML += genMixNodeYaml(
-                str(idx),
-                REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
-                testnetConfDir,
-                str(currentMixnetPortNumber),
-                str(currentPrometheusPort)
-            )
+        ports = [
+            "{0}:{0}".format(currentMixnetPortNumber),
+            "{}:{}".format(currentPrometheusPort, "6543")
+        ]
+        mixnodesYAML += genDockerService(
+            "node{}".format(idx),
+            REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
+            ports,
+            [path.join(testnetConfDir, "node-"+str(idx))+":"+"/conf"],
+            ["authority"]
+        )
 
     # save compose file
     composePath = path.join(testnetConfDir, "testnet.yml")
