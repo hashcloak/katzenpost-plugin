@@ -47,7 +47,7 @@ def generateTestnetConf(ip: str, confDir: str) -> List[str]:
         "-p",
         str(CONFIG["TEST"]["PROVIDERS"]),
     ], stdout=PIPE, stderr=STDOUT)
-    return [path.dirname(p.split(" ")[-1]) for p in output.stdout.decode().strip().split("\n")]
+    return [p.split(" ")[-1] for p in output.stdout.decode().strip().split("\n")]
 
 def getPublicKey(dirPath: str) -> str:
     """Gets the public key from identity.public.pem file in given directory"""
@@ -105,16 +105,15 @@ def main():
     ip = getIpAddress()
     confPaths = generateTestnetConf(ip, testnetConfDir)
 
-    authPath = [p for p in confPaths if "nonvoting" in p][0]
-    confPaths.remove(authPath)
-    authToml = path.join(authPath, "authority.toml")
+    authToml = [p for p in confPaths if "nonvoting" in p][0]
+    confPaths.remove(authToml)
     # Save client.toml
     with open(path.join(testnetConfDir, "client.toml"), 'w+') as f:
         f.write(clientTomlTemplate.format(
             "true",
             ip,
             getMixnetPort(authToml),
-            getPublicKey(authPath)
+            getPublicKey(path.join(path.dirname(authToml)))
         ))
 
     authorityYAML = genDockerService(
@@ -124,7 +123,7 @@ def main():
             "{0}:{0}".format(getMixnetPort(authToml))
         ],
         volumes=[
-            "{}:{}".format(authPath, getDataDir(authToml))
+            "{}:{}".format(path.join(path.dirname(authToml)), getDataDir(authToml))
         ]
     )
 
@@ -132,10 +131,10 @@ def main():
     # that we can scrape that has this value.
     currentPrometheusPort = 35000
     containerYAML = ""
-    for confDir in confPaths:
+    for toml in confPaths:
         currentPrometheusPort += 1
+        confDir = path.dirname(toml)
         name = path.basename(confDir)
-        toml = path.join(confDir, "katzenpost.toml")
         ports = [
             "{0}:{0}".format(getMixnetPort(toml)),
             "{}:{}".format(currentPrometheusPort, "6543"),
