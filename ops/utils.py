@@ -24,26 +24,32 @@ def genDockerService(
     volumes: List[str] = [],
     dependsOn: List[str] = [],
 ) -> str:
-    s = '  '
+    """
+    Creates a string with docker compose service specification.
+    Arguments are a list of values that need to be added to each section
+    named after the parameter. i.e. the volume arguments are for the
+    volumes section of the service config.
+    """
+    indent = '  '
     service = "{s}{name}:\n{s}{s}image: {image}\n".format(
-        s=s,
+        s=indent,
         name=name,
         image=image,
     )
 
     if ports:
-        service += "{s}ports:\n".format(s=s*2)
+        service += "{s}ports:\n".format(s=indent*2)
         for port in ports:
-            service += '{s}- "{port}"\n'.format(s=s*3, port=port)
+            service += '{s}- "{port}"\n'.format(s=indent*3, port=port)
 
     if volumes:
-        service += "{s}volumes:\n".format(s=s*2)
+        service += "{s}volumes:\n".format(s=indent*2)
         for vol in volumes:
-            service += '{s}- {vol}\n'.format(s=s*3, vol=vol)
+            service += '{s}- {vol}\n'.format(s=indent*3, vol=vol)
 
     if dependsOn:
-        service += "{s}depends_on:\n".format(s=s*2)
+        service += "{s}depends_on:\n".format(s=indent*2)
         for item in dependsOn:
-            service += '{s}- "{dep}"\n'.format(s=s*3, dep=item)
+            service += '{s}- "{dep}"\n'.format(s=indent*3, dep=item)
 
     return service

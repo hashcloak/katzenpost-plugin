@@ -56,12 +56,14 @@ def getPublicKey(path) -> str:
 
 
 def getMixnetPort(path: str) -> str:
+    """Gets mixnet port number from a given katzenpost.toml file"""
     with open(path, 'r') as f:
         for line in f:
             if "Addresses = [" in line:
                 return line.split('"')[1].split(":")[1]
 
 def getUserRegistrationPort(path: str) -> str:
+    """Gets the user registration port from a given katzenpost.toml file"""
     with open(path, 'r') as f:
         for line in f:
             if "UserRegistrationHTTPAddresses" in line:
