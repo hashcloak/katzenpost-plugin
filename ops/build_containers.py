@@ -5,34 +5,34 @@ import urllib.request
 from json import loads
 
 from config import CONFIG
-from utils import log, checkoutRepo
+from utils import log, checkout_repo
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 
-def doesContainerExistsInCloud(name: str, tag: str) -> bool:
+def does_container_exist_in_cloud(name: str, tag: str) -> bool:
     try:
         urllib.request.urlopen("{}/{}/tags/{}".format(dockerApiUrl, name, tag)).read()
         return True
     except urllib.error.HTTPError:
         return False
 
-def getContainerInfo(name: str, tag: str) -> str:
-    if doesContainerExistsInCloud(name, tag):
+def get_container_info(name: str, tag: str) -> str:
+    if does_container_exist_in_cloud(name, tag):
         url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
         return loads(urllib.request.urlopen(url).read().decode())
         
     raise urllib.error.URLError('Container {}:{} not found in registry'.format(name, tag))
 
-def compareRemoteContainers(containerOne: str, containerTwo: str) -> bool:
+def compare_remote_containers(containerOne: str, containerTwo: str) -> bool:
     try:
-        info1 = getContainerInfo(containerOne.split(":")[0], containerOne.split(":")[1])
-        info2 = getContainerInfo(containerTwo.split(":")[0], containerTwo.split(":")[1])
+        info1 = get_container_info(containerOne.split(":")[0], containerOne.split(":")[1])
+        info2 = get_container_info(containerTwo.split(":")[0], containerTwo.split(":")[1])
         return info1['images'][0]['digest'] == info2['images'][0]['digest']
     except urllib.error.URLError as e:
         log(e.reason)
         return False
 
-def buildContainer(container: str, tag: str, dockerFile: str, path: str) -> None:
+def build_container(container: str, tag: str, dockerFile: str, path: str) -> None:
     log("Building {}:{}".format(container, tag))
     args = [
         "docker",
@@ -53,7 +53,7 @@ def buildContainer(container: str, tag: str, dockerFile: str, path: str) -> None
     log(args)
     run(args, check=True)
 
-def reTag(container: str, tag1: str, tag2: str) -> None:
+def retag(container: str, tag1: str, tag2: str) -> None:
     log("Tagging container {} with {} -> {}".format(container, tag1, tag2))
     run([
         "docker",
@@ -65,7 +65,7 @@ def reTag(container: str, tag1: str, tag2: str) -> None:
 def main():
     # The sorted ensures that server gets built before meson
     for _, repo in sorted(CONFIG["REPOS"].items(), reverse=True):
-        areEqual = compareRemoteContainers(
+        areEqual = compare_remote_containers(
             "{}:{}".format(repo["CONTAINER"], repo["NAMEDTAG"]),
             "{}:{}".format(repo["CONTAINER"], repo["HASHTAG"])
         )
@@ -90,7 +90,8 @@ def main():
             if "authority" in repo["CONTAINER"]:
                 dockerFile = path.join(repoPath, "Dockerfile.nonvoting")
 
-            buildContainer(repo["CONTAINER"], repo["HASHTAG"], dockerFile, repoPath)
-            reTag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
+            build_container(repo["CONTAINER"], repo["HASHTAG"], dockerFile, repoPath)
+            retag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
 
-main()
+if __name__ == "__main__":
+    main()

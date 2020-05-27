@@ -43,13 +43,13 @@ CONFIG = {
     "BUILD": "",
 }
 
-gitHashLength=7
-def getRemoteGitHash(repositoryURL: str, branchOrTag: str) -> str:
+HASH_LENGTH=7
+def get_remote_git_hash(repositoryURL: str, branchOrTag: str) -> str:
     """Gets the first 7 characters of a git commit hash in a remote repository"""
     args = ["git", "ls-remote", repositoryURL, branchOrTag]
-    return check_output(args).decode().split('\t')[0][:gitHashLength]
+    return check_output(args).decode().split('\t')[0][:HASH_LENGTH]
 
-def getLocalRepoInfo() -> Tuple[str, str]:
+def get_local_repo_info() -> Tuple[str, str]:
     """
     Gets the local repository information.
     This is changes depending on whether it is is running in Travis.
@@ -65,9 +65,9 @@ def getLocalRepoInfo() -> Tuple[str, str]:
         gitBranch = getenv('TRAVIS_BRANCH', gitBranch)
         gitHash = getenv('TRAVIS_COMMIT', gitHash)
 
-    return gitBranch, gitHash[:gitHashLength]
+    return gitBranch, gitHash[:HASH_LENGTH]
 
-def expandDictionary(dictionary: dict, separator="_") -> List[str]:
+def expand_dict(dictionary: dict, separator="_") -> List[str]:
     """
     Joins all the keys of a dictionary with a separator string
     separator default is '_'
@@ -75,47 +75,45 @@ def expandDictionary(dictionary: dict, separator="_") -> List[str]:
     tempList = []
     for key, value in dictionary.items():
         if type(value) == dict:
-            tempList.extend([key+separator+item for item in expandDictionary(value)])
+            tempList.extend([key+separator+item for item in expand_dict(value)])
         else:
             tempList.append(key)
 
     return tempList
 
-def setNestedValue(dictionary: dict, value: str, keys: List[str]) -> None:
+def set_nested_value(dictionary: dict, value: str, keys: List[str]) -> None:
     """Sets a nested value inside a dictionary"""
     if keys and dictionary:
         if len(keys) == 1:
             dictionary[keys[0]] = value
         else:
-            setNestedValue(dictionary.get(keys[0]), value, keys[1:])
+            set_nested_value(dictionary.get(keys[0]), value, keys[1:])
 
-def getNestedValue(dictionary: dict, *args: List[str]) -> str:
+def get_nested_value(dictionary: dict, *args: List[str]) -> str:
     """Gets a nested value from a dictionary"""
     if args and dictionary:
         subkey = args[0]
         if subkey:
             value = dictionary.get(subkey)
-            return value if len(args) == 1 else getNestedValue(value, *args[1:])
+            return value if len(args) == 1 else get_nested_value(value, *args[1:])
 
-def main():
-    for envVar in expandDictionary(CONFIG):
-        value = getenv(envVar, getNestedValue(CONFIG, *envVar.split("_")))
-        setNestedValue(CONFIG, value, envVar.split("_"))
+for envVar in expand_dict(CONFIG):
+    value = getenv(envVar, get_nested_value(CONFIG, *envVar.split("_")))
+    set_nested_value(CONFIG, value, envVar.split("_"))
 
-    if CONFIG["WARPED"] == "false" or CONFIG["REPOS"]["MESON"]["BRANCH"] == "master":
-        CONFIG["WARPED"] = ""
+if CONFIG["WARPED"] == "false" or CONFIG["REPOS"]["MESON"]["BRANCH"] == "master":
+    CONFIG["WARPED"] = ""
 
-    localBranch, localHash = getLocalRepoInfo()
-    if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
-        CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
+localBranch, localHash = get_local_repo_info()
+if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
+    CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
 
-    for key, repo in CONFIG["REPOS"].items():
-        hashValue = localHash
-        if key != "MESON":
-            hashValue = getRemoteGitHash(repo["REPOSITORY"], repo["BRANCH"])
+for key, repo in CONFIG["REPOS"].items():
+    hashValue = localHash
+    if key != "MESON":
+        hashValue = get_remote_git_hash(repo["REPOSITORY"], repo["BRANCH"])
 
-        repo["GITHASH"] = repo["GITHASH"] if repo["GITHASH"] else hashValue
-        repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
-        repo["HASHTAG"] = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]
+    repo["GITHASH"] = repo["GITHASH"] if repo["GITHASH"] else hashValue
+    repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
+    repo["HASHTAG"] = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]
 
-main()

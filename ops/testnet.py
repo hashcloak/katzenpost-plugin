@@ -6,7 +6,7 @@ from tempfile import gettempdir
 from shutil import rmtree
 
 from config import CONFIG
-from utils import genDockerService
+from utils import generate_service
 REPOS = CONFIG["REPOS"]
 
 clientTomlTemplate = """
@@ -28,7 +28,7 @@ clientTomlTemplate = """
     PublicKey = "{}"
 """
 
-def generateTestnetConf(ip: str, confDir: str) -> List[str]:
+def generate_mixnet_config(ip: str, confDir: str) -> List[str]:
     """
     Runs the genconfig tool at a specified directory
     and returns a list of paths of the generate configs
@@ -49,34 +49,34 @@ def generateTestnetConf(ip: str, confDir: str) -> List[str]:
     ], stdout=PIPE, stderr=STDOUT)
     return [p.split(" ")[-1] for p in output.stdout.decode().strip().split("\n")]
 
-def getPublicKey(dirPath: str) -> str:
+def get_public_key(dirPath: str) -> str:
     """Gets the public key from identity.public.pem file in given directory"""
     with open(path.join(dirPath, "identity.public.pem"), 'r') as f:
         return f.read().split("\n")[1] # line index 1
 
 
-def getMixnetPort(path: str) -> str:
+def get_mixnet_port(path: str) -> str:
     """Gets mixnet port number from a given katzenpost.toml file"""
     with open(path, 'r') as f:
         for line in f:
             if "Addresses = [" in line:
                 return line.split('"')[1].split(":")[1]
 
-def getUserRegistrationPort(path: str) -> str:
+def get_user_registration_port(path: str) -> str:
     """Gets the user registration port from a given katzenpost.toml file"""
     with open(path, 'r') as f:
         for line in f:
             if "UserRegistrationHTTPAddresses" in line:
                 return line.split('"')[1].split(":")[1]
 
-def getDataDir(path: str) -> str:
+def get_data_dir(path: str) -> str:
     """Gets the config directory path from the given config file"""
     with open(path, 'r') as f:
         for line in f:
             if "DataDir =" in line:
                 return line.split('=')[-1].replace('"', '').strip()
 
-def getIpAddress() -> str:
+def get_ip() -> str:
     """Gets the IP address that is accesible by all containers"""
     s = socket()
     s.connect(("1.1.1.1", 80))
@@ -84,7 +84,7 @@ def getIpAddress() -> str:
     s.close()
     return ip
 
-def runDocker(ip: str, composePath: str) -> None:
+def run_docker(ip: str, composePath: str) -> None:
     """Starts Docker stack deploy. Starts a docker swarm if there isn't one"""
     output = check_output(["docker", "info"])
     if "Swarm: inactive" in output.decode():
@@ -102,8 +102,8 @@ def runDocker(ip: str, composePath: str) -> None:
 
 def main():
     testnetConfDir = path.join(gettempdir(), "meson-testnet")
-    ip = getIpAddress()
-    confPaths = generateTestnetConf(ip, testnetConfDir)
+    ip = get_ip()
+    confPaths = generate_mixnet_config(ip, testnetConfDir)
 
     authToml = [p for p in confPaths if "nonvoting" in p][0]
     confPaths.remove(authToml)
@@ -112,18 +112,18 @@ def main():
         f.write(clientTomlTemplate.format(
             "true",
             ip,
-            getMixnetPort(authToml),
-            getPublicKey(path.join(path.dirname(authToml)))
+            get_mixnet_port(authToml),
+            get_public_key(path.join(path.dirname(authToml)))
         ))
 
-    authorityYAML = genDockerService(
+    authorityYAML = generate_service(
         name="authority",
         image=REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
         ports=[
-            "{0}:{0}".format(getMixnetPort(authToml))
+            "{0}:{0}".format(get_mixnet_port(authToml))
         ],
         volumes=[
-            "{}:{}".format(path.join(path.dirname(authToml)), getDataDir(authToml))
+            "{}:{}".format(path.join(path.dirname(authToml)), get_data_dir(authToml))
         ]
     )
 
@@ -136,18 +136,18 @@ def main():
         confDir = path.dirname(toml)
         name = path.basename(confDir)
         ports = [
-            "{0}:{0}".format(getMixnetPort(toml)),
+            "{0}:{0}".format(get_mixnet_port(toml)),
             "{}:{}".format(currentPrometheusPort, "6543"),
         ]
-        if getUserRegistrationPort(toml):
-            ports.append("{0}:{0}".format(getUserRegistrationPort(toml)))
+        if get_user_registration_port(toml):
+            ports.append("{0}:{0}".format(get_user_registration_port(toml)))
 
-        containerYAML += genDockerService(
+        containerYAML += generate_service(
             name=name,
             image=REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
             ports=ports,
             volumes=[
-                "{}:{}".format(confDir, getDataDir(toml))
+                "{}:{}".format(confDir, get_data_dir(toml))
             ],
             dependsOn=["authority"]
         )
@@ -157,6 +157,7 @@ def main():
     with open(composePath, 'w+') as f:
         f.write('version: "3.7"\nservices:\n' + authorityYAML + containerYAML)
 
-    runDocker(ip, composePath)
+    run_docker(ip, composePath)
 
-main()
+if __name__ == "__main__":
+    main()

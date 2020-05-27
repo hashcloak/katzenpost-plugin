@@ -5,11 +5,11 @@ from subprocess import run, STDOUT, PIPE
 from time import sleep
 
 from config import CONFIG
-from utils import checkoutRepo, log
+from utils import checkout_repo, log
 
 repoPath = path.join(gettempdir(), "meson-client")
 confDir = path.join(gettempdir(), "meson-testnet")
-checkoutRepo(
+checkout_repo(
     repoPath,
     "https://github.com/hashcloak/Meson-client",
     CONFIG["TEST"]["CLIENTCOMMIT"]
