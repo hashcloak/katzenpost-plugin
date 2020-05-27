@@ -5,7 +5,7 @@ import urllib.request
 from json import loads
 
 from config import CONFIG
-from utils import log, checkout_repo
+from utils import log, checkout_repo, check_docker_is_installed
 
 dockerApiUrl="https://hub.docker.com/v2/repositories"
 
@@ -63,6 +63,7 @@ def retag(container: str, tag1: str, tag2: str) -> None:
     ], check=True)
 
 def main():
+    check_docker_is_installed()
     # The sorted ensures that server gets built before meson
     for _, repo in sorted(CONFIG["REPOS"].items(), reverse=True):
         areEqual = compare_remote_containers(
