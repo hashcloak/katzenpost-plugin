@@ -49,9 +49,9 @@ def generateTestnetConf(ip: str, confDir: str) -> List[str]:
     ], stdout=PIPE, stderr=STDOUT)
     return [path.dirname(p.split(" ")[-1]) for p in output.stdout.decode().strip().split("\n")]
 
-def getPublicKey(path) -> str:
-    """Gets the public key from file"""
-    with open(path, 'r') as f:
+def getPublicKey(dirPath: str) -> str:
+    """Gets the public key from identity.public.pem file in given directory"""
+    with open(path.join(dirPath, "identity.public.pem"), 'r') as f:
         return f.read().split("\n")[1] # line index 1
 
 
@@ -68,6 +68,13 @@ def getUserRegistrationPort(path: str) -> str:
         for line in f:
             if "UserRegistrationHTTPAddresses" in line:
                 return line.split('"')[1].split(":")[1]
+
+def getDataDir(path: str) -> str:
+    """Gets the config directory path from the given config file"""
+    with open(path, 'r') as f:
+        for line in f:
+            if "DataDir =" in line:
+                return line.split('=')[-1].replace('"', '').strip()
 
 def getIpAddress() -> str:
     """Gets the IP address that is accesible by all containers"""
@@ -100,51 +107,56 @@ def main():
 
     authPath = [p for p in confPaths if "nonvoting" in p][0]
     confPaths.remove(authPath)
+    authToml = path.join(authPath, "authority.toml")
     # Save client.toml
     with open(path.join(testnetConfDir, "client.toml"), 'w+') as f:
         f.write(clientTomlTemplate.format(
             "true",
             ip,
-            getMixnetPort(path.join(authPath, "authority.toml")),
-            getPublicKey(path.join(authPath, "identity.public.pem"))
+            getMixnetPort(authToml),
+            getPublicKey(authPath)
         ))
 
     authorityYAML = genDockerService(
         name="authority",
         image=REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
-        ports=["30000:30000"],
-        volumes=[authPath+":/conf"],
+        ports=[
+            "{0}:{0}".format(getMixnetPort(authToml))
+        ],
+        volumes=[
+            "{}:{}".format(authPath, getDataDir(authToml))
+        ]
     )
 
     # We set this value with 35000 because there is no config file 
     # that we can scrape that has this value.
     currentPrometheusPort = 35000
-
-    containerYaml = ""
-    for confPath in confPaths:
+    containerYAML = ""
+    for confDir in confPaths:
         currentPrometheusPort += 1
-        name=path.basename(confPath)
-        toml = path.join(confPath, "katzenpost.toml")
+        name = path.basename(confDir)
+        toml = path.join(confDir, "katzenpost.toml")
         ports = [
             "{0}:{0}".format(getMixnetPort(toml)),
             "{}:{}".format(currentPrometheusPort, "6543"),
         ]
-        if "provider" in name:
+        if getUserRegistrationPort(toml):
             ports.append("{0}:{0}".format(getUserRegistrationPort(toml)))
 
-        containerYaml += genDockerService(
+        containerYAML += genDockerService(
             name=name,
             image=REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
             ports=ports,
-            volumes=[p+":/conf" for p in confPaths if name in p],
+            volumes=[
+                "{}:{}".format(confDir, getDataDir(toml))
+            ],
             dependsOn=["authority"]
         )
 
     # save compose file
     composePath = path.join(testnetConfDir, "testnet.yml")
-    header = 'version: "3.7"\nservices:\n'
     with open(composePath, 'w+') as f:
-        f.write("".join([header, authorityYAML, containerYaml ]))
+        f.write('version: "3.7"\nservices:\n' + authorityYAML + containerYAML)
 
     runDocker(ip, composePath)
 
