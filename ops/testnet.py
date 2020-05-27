@@ -49,24 +49,23 @@ def generateTestnetConf(ip: str, confDir: str) -> List[str]:
     ], stdout=PIPE, stderr=STDOUT)
     return [path.dirname(p.split(" ")[-1]) for p in output.stdout.decode().strip().split("\n")]
 
-def getConfigValues(confDir: str) -> Tuple[str, str, str]:
-    """Gets the public key, port number and registration port values from files"""
-    with open(path.join(confDir, "nonvoting", "identity.public.pem"), 'r') as f:
-        authorityPublicKey = f.read().split("\n")[1] # line index 1
+def getPublicKey(path) -> str:
+    """Gets the public key from file"""
+    with open(path, 'r') as f:
+        return f.read().split("\n")[1] # line index 1
 
-    with open(path.join(confDir, "nonvoting", "authority.toml"), 'r') as f:
+
+def getMixnetPort(path: str) -> str:
+    with open(path, 'r') as f:
         for line in f:
             if "Addresses = [" in line:
-                startingPortNumber = line.split('"')[1].split(":")[1]
-                break
+                return line.split('"')[1].split(":")[1]
 
-    with open(path.join(confDir, "provider-0", "katzenpost.toml"), 'r') as f:
+def getUserRegistrationPort(path: str) -> str:
+    with open(path, 'r') as f:
         for line in f:
             if "UserRegistrationHTTPAddresses" in line:
-                startingUserRegistrationPort = line.split('"')[1].split(":")[1]
-                break
-
-    return authorityPublicKey, startingPortNumber, startingUserRegistrationPort
+                return line.split('"')[1].split(":")[1]
 
 def getIpAddress() -> str:
     """Gets the IP address that is accesible by all containers"""
@@ -96,30 +95,25 @@ def main():
     testnetConfDir = path.join(gettempdir(), "meson-testnet")
     ip = getIpAddress()
     confPaths = generateTestnetConf(ip, testnetConfDir)
-    authorityPublicKey, startingPortNumber, startingUserRegistrationPort = getConfigValues(testnetConfDir)
 
+    authPath = [p for p in confPaths if "nonvoting" in p][0]
+    confPaths.remove(authPath)
     # Save client.toml
     with open(path.join(testnetConfDir, "client.toml"), 'w+') as f:
         f.write(clientTomlTemplate.format(
             "true",
             ip,
-            startingPortNumber,
-            authorityPublicKey
+            getMixnetPort(path.join(authPath, "authority.toml")),
+            getPublicKey(path.join(authPath, "identity.public.pem"))
         ))
 
     authorityYAML = genDockerService(
         name="authority",
         image=REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
         ports=["30000:30000"],
-        volumes=[p+":/conf" for p in confPaths if "nonvoting" in p],
+        volumes=[authPath+":/conf"],
     )
-    idx=[i for i, p in enumerate(confPaths) if "nonvoting" in p][0]
-    print(idx)
-    confPaths.pop(idx)
 
-    # TODO Change these ports numbers to be read from the config files!
-    currentMixnetPortNumber = int(startingPortNumber)
-    currentUserRegistrationPort = int(startingUserRegistrationPort)-1
     # We set this value with 35000 because there is no config file 
     # that we can scrape that has this value.
     currentPrometheusPort = 35000
@@ -127,15 +121,14 @@ def main():
     containerYaml = ""
     for confPath in confPaths:
         currentPrometheusPort += 1
-        currentMixnetPortNumber += 1
         name=path.basename(confPath)
+        toml = path.join(confPath, "katzenpost.toml")
         ports = [
-            "{0}:{0}".format(currentMixnetPortNumber),
+            "{0}:{0}".format(getMixnetPort(toml)),
             "{}:{}".format(currentPrometheusPort, "6543"),
         ]
         if "provider" in name:
-            currentUserRegistrationPort += 1
-            ports.append("{0}:{0}".format(currentUserRegistrationPort))
+            ports.append("{0}:{0}".format(getUserRegistrationPort(toml)))
 
         containerYaml += genDockerService(
             name=name,
