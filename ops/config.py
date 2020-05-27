@@ -67,16 +67,15 @@ def getLocalRepoInfo() -> Tuple[str, str]:
 
     return gitBranch, gitHash[:gitHashLength]
 
-def expandDictionary(dictionary: dict, seperator="_") -> List[str]:
+def expandDictionary(dictionary: dict, separator="_") -> List[str]:
     """
-    Joins all the keys of a dictionary with a seperator string
-    seperator default is '_'
+    Joins all the keys of a dictionary with a separator string
+    separator default is '_'
     """
     tempList = []
     for key, value in dictionary.items():
         if type(value) == dict:
-            for item in expandDictionary(value):
-                tempList.append(key+seperator+item)
+            tempList.extend([key+separator+item for item in expandDictionary(value)])
         else:
             tempList.append(key)
 
