@@ -1,6 +1,6 @@
 from os import path, mkdir
-from typing import Tuple
-from subprocess import run, check_output
+from typing import Tuple, List
+from subprocess import run, check_output, PIPE, STDOUT
 from socket import socket
 from tempfile import gettempdir
 from shutil import rmtree
@@ -28,12 +28,15 @@ clientTomlTemplate = """
     PublicKey = "{}"
 """
 
-def generateTestnetConf(ip: str, confDir: str) -> None:
-    """Runs the genconfig tool at a specified directory"""
+def generateTestnetConf(ip: str, confDir: str) -> List[str]:
+    """
+    Runs the genconfig tool at a specified directory
+    and returns a list of paths of the generate configs
+    """
     try: rmtree(confDir)
     except FileNotFoundError: pass
     mkdir(confDir)
-    run([
+    output = run([
         "genconfig",
         "-o",
         confDir,
@@ -43,8 +46,8 @@ def generateTestnetConf(ip: str, confDir: str) -> None:
         ip,
         "-p",
         str(CONFIG["TEST"]["PROVIDERS"]),
-    ], check=True)
-
+    ], stdout=PIPE, stderr=STDOUT)
+    return [path.dirname(p.split(" ")[-1]) for p in output.stdout.decode().strip().split("\n")]
 
 def getConfigValues(confDir: str) -> Tuple[str, str, str]:
     """Gets the public key, port number and registration port values from files"""
@@ -92,7 +95,7 @@ def runDocker(ip: str, composePath: str) -> None:
 def main():
     testnetConfDir = path.join(gettempdir(), "meson-testnet")
     ip = getIpAddress()
-    generateTestnetConf(ip, testnetConfDir)
+    confPaths = generateTestnetConf(ip, testnetConfDir)
     authorityPublicKey, startingPortNumber, startingUserRegistrationPort = getConfigValues(testnetConfDir)
 
     # Save client.toml
@@ -108,7 +111,7 @@ def main():
         name="authority",
         image=REPOS["AUTH"]["CONTAINER"]+":"+REPOS["AUTH"]["NAMEDTAG"],
         ports=["30000:30000"],
-        volumes=["/tmp/meson-testnet/nonvoting:/conf"],
+        volumes=[p+":/conf" for p in confPaths if "nonvoting" in p],
     )
 
     currentMixnetPortNumber = int(startingPortNumber)
@@ -122,17 +125,16 @@ def main():
         currentPrometheusPort += 1
         currentMixnetPortNumber += 1
         currentUserRegistrationPort += 1
+        name="provider-{}".format(idx)
         providersYAML += genDockerService(
-            name="provider{}".format(idx),
+            name=name,
             image=REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
             ports = [
                 "{0}:{0}".format(currentMixnetPortNumber),
                 "{0}:{0}".format(currentUserRegistrationPort),
                 "{}:{}".format(currentPrometheusPort, "6543")
             ],
-            volumes=[
-                path.join(testnetConfDir, "provider-"+str(idx))+":"+"/conf"
-            ],
+            volumes=[p+":/conf" for p in confPaths if name in p],
             dependsOn=["authority"]
         )
 
@@ -140,17 +142,16 @@ def main():
     for idx in range(0, CONFIG["TEST"]["NODES"]):
         currentPrometheusPort += 1
         currentMixnetPortNumber += 1
+        name="node-{}".format(idx)
         mixnodesYAML += genDockerService(
+            name=name,
             image=REPOS["MESON"]["CONTAINER"]+":"+REPOS["MESON"]["NAMEDTAG"],
             ports=[
                 "{0}:{0}".format(currentMixnetPortNumber),
                 "{}:{}".format(currentPrometheusPort, "6543")
             ],
-            volumes=[
-                path.join(testnetConfDir, "node-"+str(idx))+":"+"/conf"
-            ],
+            volumes=[p+":/conf" for p in confPaths if name in p],
             dependsOn=["authority"],
-            name="node{}".format(idx),
         )
 
     # save compose file
