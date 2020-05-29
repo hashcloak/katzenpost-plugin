@@ -92,13 +92,11 @@ def run_docker(ip: str, composePath: str) -> None:
     if "Swarm: inactive" in output.decode():
         run(["docker", "swarm", "init", "--advertise-addr={}".format(ip)], check=True)
 
-    run(["docker",
-        "stack",
-        "deploy",
-        "-c",
-        composePath,
-        "mixnet",
-        ], check=True)
+    args ["docker", "stack", "deploy", "-c", composePath, "mixnet"]
+    try:
+        run(args, check=True)
+    except:
+        log("Failed in deploying docker compose", True)
 
     run(["docker", "service",  "ls", "--format", '"{{.Name}} with tag {{.Image}}"'])
 

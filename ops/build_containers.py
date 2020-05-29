@@ -52,16 +52,22 @@ def build_container(container: str, tag: str, dockerFile: str, path: str) -> Non
             "server={}".format(CONFIG["REPOS"]["SERVER"]["NAMEDTAG"])
         ])
     log(args)
-    run(args, check=True)
+    try:
+        run(args, check=True)
+    except:
+        log("Docker could not build container. Check if the right doker tags are being used in CONFIG", True)
 
 def retag(container: str, tag1: str, tag2: str) -> None:
     log("Tagging container {} with {} -> {}".format(container, tag1, tag2))
-    run([
-        "docker",
-        "tag",
-        "{}:{}".format(container, tag1),
-        "{}:{}".format(container, tag2)
-    ], check=True)
+    try:
+        run([
+            "docker",
+            "tag",
+            "{}:{}".format(container, tag1),
+            "{}:{}".format(container, tag2)
+        ], check=True)
+    except:
+        log("Failed in tagging containers. Check that the tags exist.", True)
 
 def main():
     check_docker_is_installed()
@@ -80,7 +86,10 @@ def main():
 
         if areEqual and not CONFIG["BUILD"]:
             log("Pulling container: {}:{}".format(repo["CONTAINER"], repo["NAMEDTAG"]))
-            run(["docker", "pull", "{}:{}".format(repo["CONTAINER"], repo["NAMEDTAG"])], check=True)
+            try:
+                run(["docker", "pull", "{}:{}".format(repo["CONTAINER"], repo["NAMEDTAG"])], check=True)
+            except:
+                log("Failed in pulling containers from registry. Check that you are pulling the right tagss or check that the containers exist in the registry", True)
         else:
             if "meson" in repo["CONTAINER"]:
                 repoPath = curdir
