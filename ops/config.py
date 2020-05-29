@@ -97,23 +97,25 @@ def get_nested_value(dictionary: dict, *args: List[str]) -> str:
             value = dictionary.get(subkey)
             return value if len(args) == 1 else get_nested_value(value, *args[1:])
 
-for envVar in expand_dict(CONFIG):
-    value = getenv(envVar, get_nested_value(CONFIG, *envVar.split("_")))
-    set_nested_value(CONFIG, value, envVar.split("_"))
+def setup_config() -> dict:
+    for envVar in expand_dict(CONFIG):
+        value = getenv(envVar, get_nested_value(CONFIG, *envVar.split("_")))
+        set_nested_value(CONFIG, value, envVar.split("_"))
 
-if CONFIG["WARPED"] == "false" or CONFIG["REPOS"]["MESON"]["BRANCH"] == "master":
-    CONFIG["WARPED"] = ""
+    if CONFIG["WARPED"] == "false" or CONFIG["REPOS"]["MESON"]["BRANCH"] == "master":
+        CONFIG["WARPED"] = ""
 
-localBranch, localHash = get_local_repo_info()
-if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
-    CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
+    localBranch, localHash = get_local_repo_info()
+    if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
+        CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
 
-for key, repo in CONFIG["REPOS"].items():
-    hashValue = localHash
-    if key != "MESON":
-        hashValue = get_remote_git_hash(repo["REPOSITORY"], repo["BRANCH"])
+    for key, repo in CONFIG["REPOS"].items():
+        hashValue = localHash
+        if key != "MESON":
+            hashValue = get_remote_git_hash(repo["REPOSITORY"], repo["BRANCH"])
 
-    repo["GITHASH"] = repo["GITHASH"] if repo["GITHASH"] else hashValue
-    repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
-    repo["HASHTAG"] = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]
+        repo["GITHASH"] = repo["GITHASH"] if repo["GITHASH"] else hashValue
+        repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
+        repo["HASHTAG"] = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]
 
+    return CONFIG

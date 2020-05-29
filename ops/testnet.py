@@ -5,8 +5,10 @@ from socket import socket
 from tempfile import gettempdir
 from shutil import rmtree
 
-from config import CONFIG
-from utils import generate_service
+from config import setup_config
+from utils import generate_service, check_docker_is_installed
+
+CONFIG = setup_config()
 REPOS = CONFIG["REPOS"]
 
 clientTomlTemplate = """
@@ -101,6 +103,7 @@ def run_docker(ip: str, composePath: str) -> None:
     run(["docker", "service",  "ls", "--format", '"{{.Name}} with tag {{.Image}}"'])
 
 def main():
+    check_docker_is_installed()
     testnetConfDir = path.join(gettempdir(), "meson-testnet")
     ip = get_ip()
     confPaths = generate_mixnet_config(ip, testnetConfDir)

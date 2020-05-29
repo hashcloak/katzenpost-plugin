@@ -1,8 +1,9 @@
-from config import CONFIG
-from subprocess import run
+from config import setup_config
+from subprocess import check_output, run
 from typing import List
 import sys
 
+CONFIG = setup_config()
 def log(message: str, err=False) -> None:
     """Logs a message to the console with purple.
     If err is True then it will log with red"""
@@ -13,7 +14,7 @@ def log(message: str, err=False) -> None:
 
 def check_docker_is_installed() -> None:
     try:
-        run(["docker", "info"], check=True)
+        check_output(["docker", "info"])
     except:
         print("Docker not found. Please install docker")
         sys.exit(1)

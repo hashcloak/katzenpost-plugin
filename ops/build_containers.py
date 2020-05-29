@@ -4,21 +4,22 @@ from tempfile import gettempdir
 import urllib.request
 from json import loads
 
-from config import CONFIG
+from config import setup_config
 from utils import log, checkout_repo, check_docker_is_installed
 
-dockerApiUrl="https://hub.docker.com/v2/repositories"
+CONFIG = setup_config()
 
+DOCKER_API="https://hub.docker.com/v2/repositories"
 def does_container_exist_in_cloud(name: str, tag: str) -> bool:
     try:
-        urllib.request.urlopen("{}/{}/tags/{}".format(dockerApiUrl, name, tag)).read()
+        urllib.request.urlopen("{}/{}/tags/{}".format(DOCKER_API, name, tag)).read()
         return True
     except urllib.error.HTTPError:
         return False
 
 def get_container_info(name: str, tag: str) -> str:
     if does_container_exist_in_cloud(name, tag):
-        url = "{}/{}/tags/{}".format(dockerApiUrl, name, tag)
+        url = "{}/{}/tags/{}".format(DOCKER_API, name, tag)
         return loads(urllib.request.urlopen(url).read().decode())
         
     raise urllib.error.URLError('Container {}:{} not found in registry'.format(name, tag))
