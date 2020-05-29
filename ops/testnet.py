@@ -92,7 +92,7 @@ def run_docker(ip: str, composePath: str) -> None:
     if "Swarm: inactive" in output.decode():
         run(["docker", "swarm", "init", "--advertise-addr={}".format(ip)], check=True)
 
-    args ["docker", "stack", "deploy", "-c", composePath, "mixnet"]
+    args = ["docker", "stack", "deploy", "-c", composePath, "mixnet"]
     try:
         run(args, check=True)
     except:
