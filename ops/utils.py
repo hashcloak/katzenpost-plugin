@@ -4,12 +4,12 @@ from typing import List
 import sys
 
 CONFIG = setup_config()
-def log(message: str, err=False) -> None:
+def log(message: str, err=False, forceLog=False) -> None:
     """Logs a message to the console with purple.
     If err is True then it will log with red"""
     color = '\033[0;31m' if err else '\033[0;35m'
     noColor='\033[0m' # No Color
-    if CONFIG["LOG"]:
+    if CONFIG["LOG"] or forceLog:
         print("{}LOG: {}{}".format(color, message, noColor))
 
 def check_docker_is_installed() -> None:

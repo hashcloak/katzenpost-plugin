@@ -1,4 +1,4 @@
-from os import path
+from os import path, getenv
 from sys import exit
 from tempfile import gettempdir
 from subprocess import run, STDOUT, PIPE
@@ -10,6 +10,10 @@ from utils import checkout_repo, log
 CONFIG = setup_config()
 
 def main():
+    if not getenv("TEST_PKS_ETHEREUM"):
+        log("Ethereum private key not set. Set with TEST_PKS_ETHEREUM environment variables", True, True)
+        exit(1)
+
     repoPath = path.join(gettempdir(), "meson-client")
     confDir = path.join(gettempdir(), "meson-testnet")
     checkout_repo(
