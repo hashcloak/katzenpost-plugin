@@ -1,5 +1,5 @@
 from config import setup_config
-from subprocess import check_output, run
+from subprocess import check_output, run, PIPE, STDOUT
 from typing import List
 import sys
 
@@ -21,7 +21,10 @@ def check_docker_is_installed() -> None:
 
 def checkout_repo(repoPath: str, repoUrl: str, commitOrBranch: str) -> None:
     """Clones, and git checkouts a repository given a path, repo url and a commit or branch"""
-    run(["git", "clone", repoUrl, repoPath])
+    output = run(["git", "clone", repoUrl, repoPath], stdout=PIPE, stderr=STDOUT)
+    log(output.stdout.decode().strip())
+    if 'already exists and is not an empty directory' in output.stdout.decode():
+        log("Ignoring last error, continuing...")
     run(["git", "fetch"], check=True, cwd=repoPath)
     run(["git", "reset", "--hard"], check=True, cwd=repoPath)
     run(["git", "-c", "advice.detachedHead=false", "checkout", commitOrBranch], check=True, cwd=repoPath)
