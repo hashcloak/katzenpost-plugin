@@ -22,9 +22,11 @@ def check_docker_is_installed() -> None:
 def checkout_repo(repoPath: str, repoUrl: str, commitOrBranch: str) -> None:
     """Clones, and git checkouts a repository given a path, repo url and a commit or branch"""
     output = run(["git", "clone", repoUrl, repoPath], stdout=PIPE, stderr=STDOUT)
-    log(output.stdout.decode().strip())
-    if 'already exists and is not an empty directory' in output.stdout.decode():
+    safeError = 'already exists and is not an empty directory' in output.stdout.decode()
+    log(output.stdout.decode().strip(), not safeError)
+    if safeError:
         log("Ignoring last error, continuing...")
+
     run(["git", "fetch"], check=True, cwd=repoPath)
     run(["git", "reset", "--hard"], check=True, cwd=repoPath)
     run(["git", "-c", "advice.detachedHead=false", "checkout", commitOrBranch], check=True, cwd=repoPath)
