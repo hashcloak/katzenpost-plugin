@@ -95,7 +95,7 @@ def main():
                 repoPath = curdir
             else:
                 repoPath = path.join(gettempdir(), repo["CONTAINER"].split("/")[-1])
-                checkoutRepo(repoPath, repo["REPOSITORY"], repo["GITHASH"])
+                checkout_repo(repoPath, repo["REPOSITORY"], repo["GITHASH"])
 
             dockerFile = path.join(repoPath, "Dockerfile")
             if "authority" in repo["CONTAINER"]:
