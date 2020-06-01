@@ -1,5 +1,7 @@
 from subprocess import run
+
 from config import setup_config
+from utils import log
 
 CONFIG = setup_config()
 
