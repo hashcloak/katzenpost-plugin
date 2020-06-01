@@ -40,6 +40,28 @@ make tesnet
 You can then use the [Wallet demo](https://github.com/hashcloak/Meson-wallet-demo) with this tesnet that just got spawned or take a look at [Sending transactions](#how-to-send-transactions). You can see the containers that are running with: `docker service ls`
 
 
+### Integrations tests
+
+The `ops/` directory contains several python scripts that can help with creating a testnet. It relies extensively on environment variables to set the different conditions of the mixnet that gets spawned. For a full list of environment variables see [this](https://meson.hashcloak.com/docs/#environment-variables).
+
+There are four environment variables that matter for the integration tests:
+
+- `TEST_PKS_ETHEREUM`: The ethereum private key to use 
+- `LOG`: Turns on logging
+- `BUILD`: Forces the build of the containers instead of pulling form docker hub.
+- `TEST_CLIENTCOMMIT`: The commit hash or branch to run the integration tests. Default master. Useful for when there is divergence between the master branches of both Meson-plugin and Meson-client repositories.
+
+
+An example command looks like this:
+
+```
+LOG=1 \
+TEST_CLIENTCOMMIT=42b868252e09f49837802d3123c8c8cce2dbe630 \ # can also be TEST_CLIENTCOMMIT=development-branch
+TEST_PKS_ETHEREUM=b7fdfefea39820f2ae25f0b47c1143e197d87ac3a1cb25c304603abcbe0834e9 \
+BUILD=1 \
+make integration_test
+```
+
 ### How to Run a Provider or Mix Node
 
 A provider node is essentially the same as a mix node just that it has more capabilities. Specifically it can provide services or capabilities in the form of [plugins](https://github.com/katzenpost/docs/blob/master/handbook/mix_server.rst#external-kaetzchen-plugin-configuration). It also acts as the edge nodes of a mixnet in which traffic either enters or leaves.
@@ -49,8 +71,8 @@ All of our infrastructure uses docker setups (but docker is not neccesary if you
 ```bash
 go get github.com/hashcloak/genconfig
 genconfig \
-  -a 138.197.57.19 \ # Current ip address of authority
-  -authID <needs update> \ # Current public key of authority
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
   -name provider-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address, needs to be reachable from the authority
   -provider # Flag to indicate you only want a provider config
@@ -103,8 +125,8 @@ The contents of `client.toml` are:
   CaseSensitiveUserIdentifiers = false
   PollingInterval = 1
 [NonvotingAuthority]
-    Address = "138.197.57.19:30000"
-    PublicKey = "RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A="
+    Address = "157.245.41.154:30000"
+    PublicKey = "qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk="
 ```
 
 ## Docs
