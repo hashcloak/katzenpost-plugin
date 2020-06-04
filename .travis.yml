@@ -3,38 +3,19 @@ language: go
 go:
   - "1.13"
 
-before_install:
-  - docker swarm init
+sudo: true
 
 script:
   - if [ -n "$(gofmt -l .)" ]; then echo "Go code is not formatted:"; gofmt -d .; exit 1; fi
-  - make test
-  - |
-    if [[ $TRAVIS_EVENT_TYPE == "pull_request" ]]; then
-      TAG=${TRAVIS_PULL_REQUEST_SHA:0:7}
-    else
-      TAG=${TRAVIS_COMMIT:0:7}
-    fi
-    MESON_TAG=$TAG make build-meson
-  - git clone https://github.com/hashcloak/Meson /tmp/Meson && cd /tmp/Meson
-  - make genconfig
-  - make pull-katzen-auth
-  - |
-    if [[ $TRAVIS_EVENT_TYPE == "pull_request" ]]; then
-      TAG=${TRAVIS_PULL_REQUEST_SHA:0:7}
-    else
-      TAG=${TRAVIS_COMMIT:0:7}
-    fi
-    MESON_IMAGE_TAG=$TAG KATZEN_AUTH=hashcloak/katzenpost-auth:1c00188 bash ./ops/containers.sh
-    sleep 90
-  - bash ./ops/tests.sh
+  - make integration_test
 
 deploy:
   - provider: script
+    skip_cleanup: true
     script:
       - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push
     on:
-      branch: master
+      all_branches: true
 
 cache:
   directories:
