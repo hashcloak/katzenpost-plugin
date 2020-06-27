@@ -102,12 +102,13 @@ def setup_config() -> dict:
         value = getenv(envVar, get_nested_value(CONFIG, *envVar.split("_")))
         set_nested_value(CONFIG, value, envVar.split("_"))
 
-    if CONFIG["WARPED"] == "false" or CONFIG["REPOS"]["MESON"]["BRANCH"] == "master":
-        CONFIG["WARPED"] = ""
-
     localBranch, localHash = get_local_repo_info()
     if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
         CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
+
+    executingInMasterPluginRepo = CONFIG["REPOS"]["MESON"]["BRANCH"] == "master" and getenv("TRAVIS_REPO_SLUG") == "hashcloak/Meson-plugin"
+    if CONFIG["WARPED"] == "false" or executingInMasterPluginRepo:
+        CONFIG["WARPED"] = ""
 
     for key, repo in CONFIG["REPOS"].items():
         hashValue = localHash
